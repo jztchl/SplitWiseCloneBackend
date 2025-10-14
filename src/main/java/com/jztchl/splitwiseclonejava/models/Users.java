@@ -27,6 +27,9 @@ public class Users  {
     @Column(nullable = false)
     private String name;
 
+    @Column(name = "profile_picture_url")
+    private String profilePictureUrl;
+
     @Email(message = "Email must be valid")
     @NotBlank(message = "Email is required")
     @Column(unique = true, length = 100, nullable = false)

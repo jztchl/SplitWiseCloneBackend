@@ -1,10 +1,13 @@
 package com.jztchl.splitwiseclonejava.services;
 
+import com.jztchl.splitwiseclonejava.models.Users;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
@@ -14,10 +17,10 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    @Value("${security.jwt.secret-key:change-me-change-me-change-me-change-me-32bytes}")
+    @Value("${security.jwt.secret-key}")
     private String secret;
 
-    @Value("${security.jwt.expiration-time:3600000}") // 1 hour default in ms
+    @Value("${security.jwt.expiration-time}") // 1 hour default in ms
     private long expirationMillis;
 
     private SecretKey key;
@@ -62,6 +65,13 @@ public class JwtService {
         }
     }
 
+    public Users getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof Users) {
+            return (Users) authentication.getPrincipal();
+        }
+        throw new IllegalStateException("No authenticated user present");
+    }
 
     private Claims getAllClaims(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
