@@ -36,7 +36,6 @@ public class Users  {
     @Column(unique = true, length = 100, nullable = false)
     private String email;
 
-    @JsonIgnore
     @NotBlank(message = "Password is required")
     @Size(min = 8, message = "Password must be at least 8 characters")
     @Column(nullable = false)

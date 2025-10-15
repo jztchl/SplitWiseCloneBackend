@@ -38,20 +38,22 @@ public class GroupService {
         newGroup.setCreatedBy(jwtService.getCurrentUser());
         newGroup=groupRepository.save(newGroup);
         HashSet<GroupMembers>  members = new HashSet<>();
+        if (!(group.getMembers() == null)) {
+            for (String email : group.getMembers()) {
+                Users user = userRepository.findByEmail(email)
+                        .orElseThrow(()->new RuntimeException(String.format("User not found email: %s", email)));
+                GroupMembers groupMember= new GroupMembers();
+                groupMember.setGroupId(newGroup);
+                groupMember.setUserId(user);
+                members.add(groupMember);
+            }
 
-        for (String email : group.getMembers()) {
-            Users user = userRepository.findByEmail(email)
-                    .orElseThrow(()->new RuntimeException(String.format("User not found email: %s", email)));
-            GroupMembers groupMember= new GroupMembers();
-            groupMember.setGroupId(newGroup);
-            groupMember.setUserId(user);
-            members.add(groupMember);
         }
-        if (!members.isEmpty()) {
-            groupMembersRepository.saveAll(members);
-        }
-
-
+        GroupMembers groupMember= new GroupMembers();
+        groupMember.setGroupId(newGroup);
+        groupMember.setUserId(jwtService.getCurrentUser());
+        members.add(groupMember);
+        groupMembersRepository.saveAll(members);
         return newGroup;
     }
     
@@ -69,22 +71,34 @@ public class GroupService {
         return groupRepository.findAllGroupListsByMember(currentUser);
     }
 
-    public void addMemberToGroup(Long groupId, String email){
+    public void addMemberToGroup(Long groupId, List<String> members){
         Groups group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", groupId)));
         if (!jwtService.getCurrentUser().equals(group.getCreatedBy())) {
             throw new RuntimeException("Only the creator of the group can add members");
         }
-        Users newUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException(String.format("User not found email: %s", email)));
+        if (!(members == null)) {
+            HashSet <GroupMembers> groupMembers = new HashSet<>();
+            for (String email: members)
+            {
+                Users newUser = userRepository.findByEmail(email)
+                        .orElseThrow(() -> new RuntimeException(String.format("User:%s not found ", email)));
 
-        if (groupMembersRepository.findByGroupIdAndUserId(group, newUser).isPresent()) {
-            throw new RuntimeException("User is already a member of this group");
+                if (groupMembersRepository.findByGroupIdAndUserId(group, newUser).isPresent()) {
+                    throw new RuntimeException(String.format("User:%s is already a member of this group",email));
+                }
+                GroupMembers groupMember= new GroupMembers();
+                groupMember.setGroupId(group);
+                groupMember.setUserId(newUser);
+                groupMembers.add(groupMember);
+            }
+            groupMembersRepository.saveAll(groupMembers);
+
         }
-        GroupMembers groupMember= new GroupMembers();
-        groupMember.setGroupId(group);
-        groupMember.setUserId(newUser);
-        groupMembersRepository.save(groupMember);
+
+
+
+
     }
 
 }

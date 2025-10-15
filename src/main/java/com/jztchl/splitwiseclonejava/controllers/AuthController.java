@@ -35,7 +35,7 @@ public class AuthController {
     @PostMapping("/login")
     public Map<String, String> login(@Valid @RequestBody LoginDto req) {
         Users user = userRepo.findByEmail(req.getEmail())
-                .orElseThrow();
+                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
         if (!encoder.matches(req.getPassword(), user.getPassword()))
             throw new RuntimeException("Invalid credentials");
 
