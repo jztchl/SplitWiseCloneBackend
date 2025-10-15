@@ -1,5 +1,6 @@
 package com.jztchl.splitwiseclonejava.controllers;
 
+import com.jztchl.splitwiseclonejava.dtos.LoginDto;
 import com.jztchl.splitwiseclonejava.models.Users;
 import com.jztchl.splitwiseclonejava.repos.UserRepository;
 import com.jztchl.splitwiseclonejava.services.JwtService;
@@ -25,16 +26,17 @@ public class AuthController {
 
     @PostMapping("/register")
     public String register(@Valid @RequestBody Users user) {
-        logger.info("Registering user: {}", user.toString());
+        logger.info("Registering user: {}", user.getEmail());
+        user.setPassword(encoder.encode(user.getPassword()));
         userRepo.save(user);
         return "User registered";
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody Map<String, String> req) {
-        Users user = userRepo.findByEmail(req.get("email"))
+    public Map<String, String> login(@Valid @RequestBody LoginDto req) {
+        Users user = userRepo.findByEmail(req.getEmail())
                 .orElseThrow();
-        if (!encoder.matches(req.get("password"), user.getPassword()))
+        if (!encoder.matches(req.getPassword(), user.getPassword()))
             throw new RuntimeException("Invalid credentials");
 
         String token = jwtService.generateToken(user.getEmail());
