@@ -22,5 +22,5 @@ Content-Type: application/json
 ###
 ### Profile (requires a valid JWT token)
 GET http://127.0.0.1:8080/api/profile
-Authorization: Bearer <token>
+Authorization: Bearer {{tokenCode}}
 
