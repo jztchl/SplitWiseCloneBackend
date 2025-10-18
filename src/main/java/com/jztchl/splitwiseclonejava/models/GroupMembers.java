@@ -1,6 +1,5 @@
 package com.jztchl.splitwiseclonejava.models;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
@@ -14,7 +13,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "group_members", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"group_id", "user_id"})
+        @UniqueConstraint(columnNames = { "group_id", "user_id" })
 })
 @Data
 public class GroupMembers extends BaseModel {
@@ -26,8 +25,9 @@ public class GroupMembers extends BaseModel {
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private Users userId;
-    
+
     private Date joinedAt;
+
     public GroupMembers() {
 
     }

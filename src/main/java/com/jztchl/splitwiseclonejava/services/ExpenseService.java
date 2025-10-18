@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
@@ -31,7 +32,7 @@ public class ExpenseService {
 
     @Autowired
     public ExpenseService(JwtService jwtService, ExpenseRepository expenseRepository, GroupRepository groupRepository,
-                          GroupMembersRepository groupMembersRepository, ExpenseShareRepository expenseShareRepository) {
+            GroupMembersRepository groupMembersRepository, ExpenseShareRepository expenseShareRepository) {
         this.jwtService = jwtService;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
@@ -40,7 +41,7 @@ public class ExpenseService {
     }
 
     @Transactional
-    public Expenses createExpense(CreateExpenseDto dto) {
+    public ExpenseDetailDto createExpense(CreateExpenseDto dto) {
         Users currentUser = jwtService.getCurrentUser();
         Groups group = groupRepository.findById(dto.getGroupId())
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", dto.getGroupId())));
@@ -48,12 +49,20 @@ public class ExpenseService {
             throw new RuntimeException("You do not have permission to create expense for this group");
         }
         Expenses expense = new Expenses();
+        ExpenseDetailDto expenseDetailDto = new ExpenseDetailDto();
         expense.setAmount(dto.getAmount());
         expense.setGroupId(group);
         expense.setDescription(dto.getDescription());
         expense.setSplitType(dto.getSplitType());
         expense.setPaidBy(currentUser);
         expense = expenseRepository.save(expense);
+
+        expenseDetailDto.setId(expense.getId());
+        expenseDetailDto.setDescription(expense.getDescription());
+        expenseDetailDto.setAmount(expense.getAmount());
+        expenseDetailDto.setSplitType(expense.getSplitType());
+        expenseDetailDto.setPaidBy(Long.valueOf(expense.getPaidBy().getId()));
+        List<ExpenseShareDto> shareDtos = new ArrayList<>();
 
         switch (dto.getSplitType()) {
             case Expenses.SplitType.EQUAL: {
@@ -69,9 +78,17 @@ public class ExpenseService {
                         share.setUserId(member.getUserId());
                         share.setAmountOwed(amountOwed);
                         expense.getShares().add(share);
+                        ExpenseShareDto shareDto = new ExpenseShareDto();
+                        shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
+                        shareDto.setAmountOwed(amountOwed);
+                        shareDtos.add(shareDto);
                     }
                 } else {
-                    List<GroupMembers> membersList = groupMembersRepository.findAllById(dto.getMemberIds());
+                    List<GroupMembers> membersList = groupMembersRepository.findAllByGroupfindUserIds(group,
+                            dto.getMemberIds());
+                    System.out.println("**********************************************************");
+                    System.out.println(dto.getMemberIds());
+                    System.out.println(membersList);
                     if (membersList.size() != dto.getMemberIds().size()) {
                         throw new RuntimeException("Invalid member ids");
                     }
@@ -83,6 +100,10 @@ public class ExpenseService {
                         share.setUserId(member.getUserId());
                         share.setAmountOwed(amountOwed);
                         expense.getShares().add(share);
+                        ExpenseShareDto shareDto = new ExpenseShareDto();
+                        shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
+                        shareDto.setAmountOwed(amountOwed);
+                        shareDtos.add(shareDto);
                     }
                 }
                 break;
@@ -100,15 +121,22 @@ public class ExpenseService {
                     throw new RuntimeException("Total percentage must equal 100");
                 }
 
-                List<Long> memberIds = new ArrayList<>(dto.getSplitDetails().keySet());
-                List<GroupMembers> membersList = groupMembersRepository.findAllById(memberIds);
+                List<Long> memberIds = new ArrayList<>(
+                        dto.getSplitDetails().keySet().stream().map(Long::valueOf).collect(Collectors.toList()));
+                List<GroupMembers> membersList = groupMembersRepository.findAllByGroupfindUserIds(group, memberIds);
 
                 if (membersList.size() != memberIds.size()) {
                     throw new RuntimeException("Invalid member ids in split details");
                 }
                 for (GroupMembers member : membersList) {
+                    long userId = member.getUserId().getId();
+                    System.out.println(userId);
+                    // Convert to Long for map lookup
                     BigDecimal percent = dto.getSplitDetails()
-                            .get(member.getUserId().getId());
+                            .get(Long.valueOf(userId));
+                    if (percent == null) {
+                        throw new RuntimeException("No percentage found for user ID: " + userId);
+                    }
                     BigDecimal amountOwed = dto.getAmount()
                             .multiply(percent)
                             .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
@@ -118,6 +146,10 @@ public class ExpenseService {
                     share.setUserId(member.getUserId());
                     share.setAmountOwed(amountOwed);
                     expense.getShares().add(share);
+                    ExpenseShareDto shareDto = new ExpenseShareDto();
+                    shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
+                    shareDto.setAmountOwed(amountOwed);
+                    shareDtos.add(shareDto);
                 }
                 break;
 
@@ -140,13 +172,17 @@ public class ExpenseService {
                     throw new RuntimeException("Invalid member ids in split details");
                 }
                 for (GroupMembers member : membersList) {
-                    BigDecimal amountOwed = dto.getSplitDetails().get(member.getUserId().getId());
+                    BigDecimal amountOwed = dto.getSplitDetails().get(Long.valueOf(member.getUserId().getId()));
 
                     ExpenseShare share = new ExpenseShare();
                     share.setExpense(expense);
                     share.setUserId(member.getUserId());
                     share.setAmountOwed(amountOwed);
                     expense.getShares().add(share);
+                    ExpenseShareDto shareDto = new ExpenseShareDto();
+                    shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
+                    shareDto.setAmountOwed(amountOwed);
+                    shareDtos.add(shareDto);
                 }
                 break;
             }
@@ -164,14 +200,16 @@ public class ExpenseService {
                 }
             }
         });
+        expenseDetailDto.setShares(shareDtos);
         expenseRepository.save(expense);
-        return expense;
+        return expenseDetailDto;
     }
 
-
     public ExpenseDetailDto getExpenseDetail(Long expenseId) {
-        Expenses expense = expenseRepository.findByIdWithDetails(expenseId).orElseThrow(() -> new RuntimeException("Expense not found"));
-        if (groupMembersRepository.findByGroupIdAndUserId(expense.getGroupId(), jwtService.getCurrentUser()).isEmpty()) {
+        Expenses expense = expenseRepository.findByIdWithDetails(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+        if (groupMembersRepository.findByGroupIdAndUserId(expense.getGroupId(), jwtService.getCurrentUser())
+                .isEmpty()) {
             throw new RuntimeException("You do not have permission to view this expense");
         }
 
@@ -191,7 +229,6 @@ public class ExpenseService {
         dto.setShares(shareDtos);
         dto.setPaidBy(Long.valueOf(expense.getPaidBy().getId()));
         return dto;
-
 
     }
 

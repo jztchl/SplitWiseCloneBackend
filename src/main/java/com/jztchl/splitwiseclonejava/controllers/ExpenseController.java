@@ -2,7 +2,6 @@ package com.jztchl.splitwiseclonejava.controllers;
 
 import com.jztchl.splitwiseclonejava.dtos.CreateExpenseDto;
 import com.jztchl.splitwiseclonejava.dtos.ExpenseDetailDto;
-import com.jztchl.splitwiseclonejava.models.Expenses;
 import com.jztchl.splitwiseclonejava.services.ExpenseService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,7 @@ public class ExpenseController {
     }
 
     @PostMapping("/create-expense")
-    public Expenses createExpense(@Valid @RequestBody CreateExpenseDto dto) {
+    public ExpenseDetailDto createExpense(@Valid @RequestBody CreateExpenseDto dto) {
         System.out.println(dto);
         return expenseService.createExpense(dto);
     }
