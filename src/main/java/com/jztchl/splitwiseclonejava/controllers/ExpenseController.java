@@ -4,7 +4,6 @@ import com.jztchl.splitwiseclonejava.dtos.CreateExpenseDto;
 import com.jztchl.splitwiseclonejava.dtos.ExpenseDetailDto;
 import com.jztchl.splitwiseclonejava.services.ExpenseService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,7 +12,6 @@ public class ExpenseController {
 
     private final ExpenseService expenseService;
 
-    @Autowired
     public ExpenseController(ExpenseService expenseService) {
         this.expenseService = expenseService;
     }

@@ -1,7 +1,6 @@
 package com.jztchl.splitwiseclonejava.dtos;
 
 import com.jztchl.splitwiseclonejava.models.Expenses;
-import com.jztchl.splitwiseclonejava.models.Users;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -17,6 +16,4 @@ public class ExpenseDetailDto {
     Expenses.SplitType splitType;
     List<ExpenseShareDto> shares;
     Long paidBy;
-
-
 }

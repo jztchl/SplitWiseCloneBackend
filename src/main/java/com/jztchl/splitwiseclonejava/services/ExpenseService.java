@@ -28,15 +28,12 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final GroupRepository groupRepository;
     private final GroupMembersRepository groupMembersRepository;
-    private final ExpenseShareRepository expenseShareRepository;
 
-    @Autowired
     public ExpenseService(JwtService jwtService, ExpenseRepository expenseRepository, GroupRepository groupRepository,
-            GroupMembersRepository groupMembersRepository, ExpenseShareRepository expenseShareRepository) {
+            GroupMembersRepository groupMembersRepository) {
         this.jwtService = jwtService;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
-        this.expenseShareRepository = expenseShareRepository;
         this.groupMembersRepository = groupMembersRepository;
     }
 
