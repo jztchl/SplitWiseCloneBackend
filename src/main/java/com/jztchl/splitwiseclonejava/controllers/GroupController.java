@@ -2,6 +2,7 @@ package com.jztchl.splitwiseclonejava.controllers;
 
 import com.jztchl.splitwiseclonejava.dtos.AddGroupMembers;
 import com.jztchl.splitwiseclonejava.dtos.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.dtos.GroupDetailsDto;
 import com.jztchl.splitwiseclonejava.dtos.GroupListDto;
 import com.jztchl.splitwiseclonejava.models.Groups;
 import com.jztchl.splitwiseclonejava.services.GroupService;
@@ -25,8 +26,9 @@ public class GroupController
     public List<GroupListDto> getAllGroups(){
         return groupService.getAllGroups();
     }
+
     @GetMapping("/{id}")
-    public Groups getGroupById(@PathVariable Long id){
+    public GroupDetailsDto getGroupById(@PathVariable Long id){
         return groupService.getGroupById(id);
     }
 

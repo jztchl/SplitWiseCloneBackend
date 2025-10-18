@@ -1,7 +1,9 @@
 package com.jztchl.splitwiseclonejava.services;
 
 import com.jztchl.splitwiseclonejava.dtos.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.dtos.GroupDetailsDto;
 import com.jztchl.splitwiseclonejava.dtos.GroupListDto;
+import com.jztchl.splitwiseclonejava.dtos.GroupMembersDto;
 import com.jztchl.splitwiseclonejava.models.GroupMembers;
 import com.jztchl.splitwiseclonejava.models.Groups;
 import com.jztchl.splitwiseclonejava.models.Users;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 
@@ -57,13 +60,27 @@ public class GroupService {
         return newGroup;
     }
     
-    public Groups getGroupById(Long id){
+    public GroupDetailsDto getGroupById(Long id){
         Users currentUser = jwtService.getCurrentUser();
         Groups group = groupRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", id)));
         GroupMembers membership = groupMembersRepository.findByGroupIdAndUserId(group, currentUser)
                 .orElseThrow(() -> new RuntimeException("User is not a member of this group"));
-        return group;
+        GroupDetailsDto groupDetailsDto = new GroupDetailsDto();
+        groupDetailsDto.setId(group.getId());
+        groupDetailsDto.setName(group.getGroupName());
+        groupDetailsDto.setDescription(group.getDescription());
+        List<GroupMembersDto>  membersDto = new ArrayList<>();
+        for (GroupMembers member :group.getMembers()) {
+            GroupMembersDto groupMembersDto = new GroupMembersDto();
+            groupMembersDto.setId(Long.valueOf(member.getUserId().getId()));
+            groupMembersDto.setName(member.getUserId().getName());
+            groupMembersDto.setDescription(member.getUserId().getEmail());
+            membersDto.add(groupMembersDto);
+
+        }
+        groupDetailsDto.setMembers(membersDto);
+        return groupDetailsDto;
     }
 
     public List<GroupListDto> getAllGroups(){
