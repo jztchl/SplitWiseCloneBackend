@@ -64,8 +64,9 @@ public class GroupService {
         Users currentUser = jwtService.getCurrentUser();
         Groups group = groupRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", id)));
-        GroupMembers membership = groupMembersRepository.findByGroupIdAndUserId(group, currentUser)
-                .orElseThrow(() -> new RuntimeException("User is not a member of this group"));
+        if (!groupMembersRepository.existsByGroupIdAndUserId(group, currentUser)) {
+            throw new RuntimeException("You are not a member of this group");
+        }
         GroupDetailsDto groupDetailsDto = new GroupDetailsDto();
         groupDetailsDto.setId(group.getId());
         groupDetailsDto.setName(group.getGroupName());
@@ -100,8 +101,8 @@ public class GroupService {
                 Users newUser = userRepository.findByEmail(email)
                         .orElseThrow(() -> new RuntimeException(String.format("User:%s not found ", email)));
 
-                if (groupMembersRepository.findByGroupIdAndUserId(group, newUser).isPresent()) {
-                    throw new RuntimeException(String.format("User:%s is already a member of this group", email));
+                if (groupMembersRepository.existsByGroupIdAndUserId(group, newUser)) {
+                    throw new RuntimeException("User is already present");
                 }
                 GroupMembers groupMember = new GroupMembers();
                 groupMember.setGroupId(group);
