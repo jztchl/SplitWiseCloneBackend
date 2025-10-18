@@ -1,14 +1,13 @@
-### Auth
-### Login
-POST http://127.0.0.1:8080/api/auth/login
+### Expense
+### Create Expense
+POST http://127.0.0.1:8080/api/expense/create-expense
 Content-Type: application/json
 Authorization: Bearer  {{tokenCode}}
 
 {
-   "groupId": 1,
- "description": "expense description",
- "amount": 200,
+  "groupId": 6,
+  "description": "expense description",
+  "amount": 200,
   "splitType": "EQUAL",
-  "splitDetails" :{},
   "memberIds": []
 }
