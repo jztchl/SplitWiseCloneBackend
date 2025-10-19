@@ -5,10 +5,10 @@ import com.jztchl.splitwiseclonejava.dtos.ExpenseDetailDto;
 import com.jztchl.splitwiseclonejava.dtos.ExpenseShareDto;
 import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
-import com.jztchl.splitwiseclonejava.repos.ExpenseShareRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.jztchl.splitwiseclonejava.utility.EmailService;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,13 +28,15 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final GroupRepository groupRepository;
     private final GroupMembersRepository groupMembersRepository;
+    private final EmailService emailService;
 
     public ExpenseService(JwtService jwtService, ExpenseRepository expenseRepository, GroupRepository groupRepository,
-            GroupMembersRepository groupMembersRepository) {
+                          GroupMembersRepository groupMembersRepository, EmailService emailService) {
         this.jwtService = jwtService;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
         this.groupMembersRepository = groupMembersRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -167,12 +169,13 @@ public class ExpenseService {
 
         }
 
+        Expenses finalExpense = expense;
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 try {
 
-                    System.out.println("Expense created successfully with amount: " + dto.getAmount());
+                    emailService.newExpenseSharedNotification(finalExpense);
                 } catch (Exception e) {
                     System.err.println("Error in post-commit processing: " + e.getMessage());
                 }

@@ -10,8 +10,11 @@ import com.jztchl.splitwiseclonejava.models.Users;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
 import com.jztchl.splitwiseclonejava.repos.UserRepository;
+import com.jztchl.splitwiseclonejava.utility.EmailService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -24,13 +27,15 @@ public class GroupService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final GroupMembersRepository groupMembersRepository;
+    private final EmailService emailService;
 
     public GroupService(GroupRepository groupRepository, JwtService jwtService, UserRepository userRepository,
-            GroupMembersRepository groupMembersRepository) {
+                        GroupMembersRepository groupMembersRepository, EmailService emailService) {
         this.groupRepository = groupRepository;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.groupMembersRepository = groupMembersRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -56,6 +61,18 @@ public class GroupService {
         groupMember.setGroupId(newGroup);
         groupMember.setUserId(jwtService.getCurrentUser());
         members.add(groupMember);
+        Groups finalNewGroup = newGroup;
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                try {
+                    emailService.addedToGroupNotification(finalNewGroup);
+                    System.out.println("Group created successfully");
+                } catch (Exception e) {
+                    System.err.println("Error in post-commit processing: " + e.getMessage());
+                }
+            }
+        });
         groupMembersRepository.saveAll(members);
         return newGroup;
     }

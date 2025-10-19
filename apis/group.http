@@ -4,33 +4,41 @@ Content-Type: application/json
 Authorization: Bearer  {{tokenCode}}
 
 {
-"groupName": "GROUP 2",
+  "groupName": "GROUP 2",
   "groupDescription": "the description 1"
-
 }
+
 ### create group with members
 POST 127.0.0.1:8080/api/groups/create-group
 Content-Type: application/json
 Authorization: Bearer {{tokenCode}}
 
 {
-  "groupName": "GROUP 1",
+  "groupName": "GROUP 5",
   "groupDescription": "the description 1",
-  "members": ["user2@example.com","user3@example.com"]
-
+  "members": [
+    "user2@example.com",
+    "user3@example.com"
+  ]
 }
+
 ### List the group with membership
 GET 127.0.0.1:8080/api/groups
 Authorization: Bearer {{tokenCode}}
+
 ### get group by id
 GET 127.0.0.1:8080/api/groups/6
 Authorization: Bearer {{tokenCode}}
+
 ### add member
 POST 127.0.0.1:8080/api/groups/7/add-member
 Authorization: Bearer {{tokenCode}}
 Content-Type: application/json
 
 {
-"members":["user4@example.com","user5@example.com"]
+  "members": [
+    "user4@example.com",
+    "user5@example.com"
+  ]
 }
 
