@@ -5,8 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Map;
+
 @Getter
 @Setter
 public class CreateExpenseDto {
@@ -15,5 +15,4 @@ public class CreateExpenseDto {
     private BigDecimal amount;
     private Expenses.SplitType splitType;
     private Map<Long, BigDecimal> splitDetails;
-    private List<Long> memberIds;
 }

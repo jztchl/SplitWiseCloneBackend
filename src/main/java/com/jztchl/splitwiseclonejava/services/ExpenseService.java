@@ -63,48 +63,24 @@ public class ExpenseService {
 
         switch (dto.getSplitType()) {
             case Expenses.SplitType.EQUAL: {
-                if (dto.getMemberIds() == null || dto.getMemberIds().isEmpty()) {
-                    BigDecimal amountOwed = dto.getAmount().divide(BigDecimal.valueOf(group.getMembers().size() - 1), 2,
-                            RoundingMode.HALF_UP);
-                    for (GroupMembers member : group.getMembers()) {
-                        if (member.getUserId().equals(currentUser)) {
-                            continue;
-                        }
-                        ExpenseShare share = new ExpenseShare();
-                        share.setExpense(expense);
-                        share.setUserId(member.getUserId());
-                        share.setAmountOwed(amountOwed);
-                        expense.getShares().add(share);
-                        ExpenseShareDto shareDto = new ExpenseShareDto();
-                        shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
-                        shareDto.setAmountOwed(amountOwed);
-                        shareDtos.add(shareDto);
+
+                BigDecimal amountOwed = dto.getAmount().divide(BigDecimal.valueOf(group.getMembers().size() - 1), 2,
+                        RoundingMode.HALF_UP);
+                for (GroupMembers member : group.getMembers()) {
+                    if (member.getUserId().equals(currentUser)) {
+                        continue;
                     }
-                } else {
-                    List<Long> memberIds = new ArrayList<>(
-                            dto.getMemberIds().stream().map(Long::valueOf).collect(Collectors.toList()));
-                    List<GroupMembers> membersList = groupMembersRepository.findAllByGroupfindUserIds(group,
-                            memberIds);
-                    System.out.println("**********************************************************");
-                    System.out.println(dto.getMemberIds());
-                    System.out.println(membersList);
-                    if (membersList.size() != dto.getMemberIds().size()) {
-                        throw new RuntimeException("Invalid member ids");
-                    }
-                    BigDecimal amountOwed = dto.getAmount().divide(BigDecimal.valueOf(membersList.size()), 2,
-                            RoundingMode.HALF_UP);
-                    for (GroupMembers member : membersList) {
-                        ExpenseShare share = new ExpenseShare();
-                        share.setExpense(expense);
-                        share.setUserId(member.getUserId());
-                        share.setAmountOwed(amountOwed);
-                        expense.getShares().add(share);
-                        ExpenseShareDto shareDto = new ExpenseShareDto();
-                        shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
-                        shareDto.setAmountOwed(amountOwed);
-                        shareDtos.add(shareDto);
-                    }
+                    ExpenseShare share = new ExpenseShare();
+                    share.setExpense(expense);
+                    share.setUserId(member.getUserId());
+                    share.setAmountOwed(amountOwed);
+                    expense.getShares().add(share);
+                    ExpenseShareDto shareDto = new ExpenseShareDto();
+                    shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
+                    shareDto.setAmountOwed(amountOwed);
+                    shareDtos.add(shareDto);
                 }
+
                 break;
 
             }

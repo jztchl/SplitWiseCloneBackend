@@ -8,25 +8,9 @@ Authorization: Bearer  {{tokenCode}}
   "groupId": 6,
   "description": "expense description",
   "amount": 200,
-  "splitType": "EQUAL",
-  "memberIds": []
+  "splitType": "EQUAL"
 }
 
-###
-### create expense with member ids(divided among given members)
-POST http://127.0.0.1:8080/api/expense/create-expense
-Content-Type: application/json
-Authorization: Bearer  {{tokenCode}}
-
-{
-  "groupId": 6,
-  "description": "expense description",
-  "amount": 200,
-  "splitType": "EQUAL",
-  "memberIds": [
-    553
-  ]
-}
 
 ###
 ### create expense percentage per member
