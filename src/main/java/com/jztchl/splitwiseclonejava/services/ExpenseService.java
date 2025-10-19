@@ -81,8 +81,10 @@ public class ExpenseService {
                         shareDtos.add(shareDto);
                     }
                 } else {
+                    List<Long> memberIds = new ArrayList<>(
+                            dto.getMemberIds().stream().map(Long::valueOf).collect(Collectors.toList()));
                     List<GroupMembers> membersList = groupMembersRepository.findAllByGroupfindUserIds(group,
-                            dto.getMemberIds());
+                            memberIds);
                     System.out.println("**********************************************************");
                     System.out.println(dto.getMemberIds());
                     System.out.println(membersList);
@@ -158,12 +160,15 @@ public class ExpenseService {
                 List<BigDecimal> amounts = new ArrayList<>(dto.getSplitDetails().values());
                 BigDecimal totalAmount = amounts.stream()
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
+                System.out.println(totalAmount);
+                System.out.println(dto.getAmount());
 
-                if (totalAmount.compareTo(expense.getAmount()) != 0) {
+                if (totalAmount.compareTo(expense.getAmount()) > 0) {
                     throw new RuntimeException("Total amount cannot exceed the actual amount");
                 }
-                List<Long> memberIds = new ArrayList<>(dto.getSplitDetails().keySet());
-                List<GroupMembers> membersList = groupMembersRepository.findAllById(memberIds);
+                List<Long> memberIds = new ArrayList<>(
+                        dto.getSplitDetails().keySet().stream().map(Long::valueOf).collect(Collectors.toList()));
+                List<GroupMembers> membersList = groupMembersRepository.findAllByGroupfindUserIds(group, memberIds);
 
                 if (membersList.size() != memberIds.size()) {
                     throw new RuntimeException("Invalid member ids in split details");
