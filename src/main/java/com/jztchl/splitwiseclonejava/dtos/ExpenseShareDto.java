@@ -11,5 +11,6 @@ public class ExpenseShareDto {
     Long id;
     Long userId;
     BigDecimal amountOwed;
+    boolean isPaid;
 
 }

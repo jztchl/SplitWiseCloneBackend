@@ -76,6 +76,7 @@ public class ExpenseService {
                     share.setExpense(expense);
                     share.setUserId(member.getUserId());
                     share.setAmountOwed(amountOwed);
+                    share.setPaid(false);
                     expense.getShares().add(share);
                     ExpenseShareDto shareDto = new ExpenseShareDto();
                     shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
@@ -122,6 +123,7 @@ public class ExpenseService {
                     share.setExpense(expense);
                     share.setUserId(member.getUserId());
                     share.setAmountOwed(amountOwed);
+                    share.setPaid(false);
                     expense.getShares().add(share);
                     ExpenseShareDto shareDto = new ExpenseShareDto();
                     shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
@@ -158,6 +160,7 @@ public class ExpenseService {
                     share.setExpense(expense);
                     share.setUserId(member.getUserId());
                     share.setAmountOwed(amountOwed);
+                    share.setPaid(false);
                     expense.getShares().add(share);
                     ExpenseShareDto shareDto = new ExpenseShareDto();
                     shareDto.setUserId(Long.valueOf(member.getUserId().getId()));
@@ -205,6 +208,7 @@ public class ExpenseService {
             shareDto.setId(share.getId());
             shareDto.setUserId(Long.valueOf(share.getUserId().getId()));
             shareDto.setAmountOwed(share.getAmountOwed());
+            shareDto.setPaid(share.isPaid());
             shareDtos.add(shareDto);
         }
         dto.setShares(shareDtos);
