@@ -1,7 +1,7 @@
 package com.jztchl.splitwiseclonejava.controllers;
 
-import com.jztchl.splitwiseclonejava.dtos.CreateExpenseDto;
-import com.jztchl.splitwiseclonejava.dtos.ExpenseDetailDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.CreateExpenseDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.ExpenseDetailDto;
 import com.jztchl.splitwiseclonejava.services.ExpenseService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;

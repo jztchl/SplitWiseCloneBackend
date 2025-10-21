@@ -1,4 +1,4 @@
-package com.jztchl.splitwiseclonejava.dtos;
+package com.jztchl.splitwiseclonejava.dtos.expense;
 
 import java.math.BigDecimal;
 

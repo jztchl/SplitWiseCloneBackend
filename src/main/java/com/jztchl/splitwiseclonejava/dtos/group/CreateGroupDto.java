@@ -1,9 +1,10 @@
-package com.jztchl.splitwiseclonejava.dtos;
+package com.jztchl.splitwiseclonejava.dtos.group;
 
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
+
 @Getter
 @Setter
 public class CreateGroupDto {
@@ -11,5 +12,6 @@ public class CreateGroupDto {
     private String groupDescription;
     private List<String> members;
 
-    public CreateGroupDto() {}
+    public CreateGroupDto() {
+    }
 }

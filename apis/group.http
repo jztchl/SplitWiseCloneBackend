@@ -42,3 +42,8 @@ Content-Type: application/json
   ]
 }
 
+
+####
+####List expenses of a group
+GET http://127.0.0.1:8080/api/groups/1/get-expenses
+Authorization: Bearer {{tokenCode}}

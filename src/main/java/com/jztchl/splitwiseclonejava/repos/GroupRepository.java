@@ -1,6 +1,6 @@
 package com.jztchl.splitwiseclonejava.repos;
 
-import com.jztchl.splitwiseclonejava.dtos.GroupListDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupListDto;
 import com.jztchl.splitwiseclonejava.models.Groups;
 import com.jztchl.splitwiseclonejava.models.Users;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface GroupRepository extends JpaRepository<Groups,Long> {
+public interface GroupRepository extends JpaRepository<Groups, Long> {
     @Query("SELECT g.id AS id, g.groupName AS groupName, g.createdBy.name AS groupOwner " +
             "FROM Groups g JOIN GroupMembers gm ON gm.groupId = g " +
             "WHERE gm.userId = :user")

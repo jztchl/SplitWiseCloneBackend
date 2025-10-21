@@ -1,8 +1,9 @@
 package com.jztchl.splitwiseclonejava.services;
 
-import com.jztchl.splitwiseclonejava.dtos.CreateExpenseDto;
-import com.jztchl.splitwiseclonejava.dtos.ExpenseDetailDto;
-import com.jztchl.splitwiseclonejava.dtos.ExpenseShareDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.CreateExpenseDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.ExpenseDetailDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.ExpenseShareDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.ListExpenseDto;
 import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
@@ -217,4 +218,14 @@ public class ExpenseService {
 
     }
 
+    public List<ListExpenseDto> listExpenses(Long id) {
+        Groups group = groupRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", id)));
+        if (groupMembersRepository.findByGroupIdAndUserId(group, jwtService.getCurrentUser())
+                .isEmpty()) {
+            throw new RuntimeException("You do not have permission to view this group's expenses");
+        }
+
+        return expenseRepository.findAllByGroupId(group);
+    }
 }

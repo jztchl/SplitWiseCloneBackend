@@ -1,9 +1,9 @@
 package com.jztchl.splitwiseclonejava.services;
 
-import com.jztchl.splitwiseclonejava.dtos.CreateGroupDto;
-import com.jztchl.splitwiseclonejava.dtos.GroupDetailsDto;
-import com.jztchl.splitwiseclonejava.dtos.GroupListDto;
-import com.jztchl.splitwiseclonejava.dtos.GroupMembersDto;
+import com.jztchl.splitwiseclonejava.dtos.group.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupDetailsDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupListDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupMembersDto;
 import com.jztchl.splitwiseclonejava.models.GroupMembers;
 import com.jztchl.splitwiseclonejava.models.Groups;
 import com.jztchl.splitwiseclonejava.models.Users;

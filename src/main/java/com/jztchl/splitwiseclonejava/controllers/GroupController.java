@@ -1,10 +1,12 @@
 package com.jztchl.splitwiseclonejava.controllers;
 
-import com.jztchl.splitwiseclonejava.dtos.AddGroupMembers;
-import com.jztchl.splitwiseclonejava.dtos.CreateGroupDto;
-import com.jztchl.splitwiseclonejava.dtos.GroupDetailsDto;
-import com.jztchl.splitwiseclonejava.dtos.GroupListDto;
+import com.jztchl.splitwiseclonejava.dtos.expense.ListExpenseDto;
+import com.jztchl.splitwiseclonejava.dtos.group.AddGroupMembers;
+import com.jztchl.splitwiseclonejava.dtos.group.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupDetailsDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupListDto;
 import com.jztchl.splitwiseclonejava.models.Groups;
+import com.jztchl.splitwiseclonejava.services.ExpenseService;
 import com.jztchl.splitwiseclonejava.services.GroupService;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +16,11 @@ import java.util.List;
 @RequestMapping("/api/groups")
 public class GroupController {
     private final GroupService groupService;
+    private final ExpenseService expenseService;
 
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, ExpenseService expenseService) {
         this.groupService = groupService;
+        this.expenseService = expenseService;
     }
 
     @GetMapping
@@ -38,6 +42,12 @@ public class GroupController {
     public String addMember(@PathVariable Long id, @RequestBody AddGroupMembers members) {
         groupService.addMemberToGroup(id, members.getMembers());
         return "ok";
+
+    }
+
+    @GetMapping("/{id}/get-expenses")
+    public List<ListExpenseDto> getExpense(@PathVariable Long id) {
+        return expenseService.listExpenses(id);
 
     }
 }

@@ -1,4 +1,4 @@
-package com.jztchl.splitwiseclonejava.dtos;
+package com.jztchl.splitwiseclonejava.dtos.expense;
 
 import com.jztchl.splitwiseclonejava.models.Expenses;
 import lombok.Getter;
