@@ -11,6 +11,7 @@ public class ExpenseShareDto {
     Long id;
     Long userId;
     BigDecimal amountOwed;
+    private BigDecimal amountRemaining = BigDecimal.valueOf(0);// will do after settlement
     boolean isPaid;
 
 }

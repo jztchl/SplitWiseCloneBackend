@@ -25,7 +25,9 @@ public class Settlement extends BaseModel {
     @Enumerated(EnumType.STRING)
     private SettlementStatus status;
 
-    private String paymentRef;
+    @ManyToOne
+    @JoinColumn(name = "payment_ref_id")
+    private Doc paymentRef;
     private String note;
 
     private String paymentProofUrl;

@@ -37,3 +37,4 @@ out/
 .vscode/
 .env
 /apis/http-client.env.json
+/uploads

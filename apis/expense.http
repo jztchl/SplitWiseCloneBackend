@@ -45,3 +45,9 @@ Authorization: Bearer  {{tokenCode}}
     "554": 78
   }
 }
+
+###
+###Get expense
+GET http://127.0.0.1:8080/api/expense/1
+Content-Type: application/json
+Authorization: Bearer  {{tokenCode}}
