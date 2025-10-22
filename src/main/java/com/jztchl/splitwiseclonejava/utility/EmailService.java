@@ -1,9 +1,6 @@
 package com.jztchl.splitwiseclonejava.utility;
 
-import com.jztchl.splitwiseclonejava.models.ExpenseShare;
-import com.jztchl.splitwiseclonejava.models.Expenses;
-import com.jztchl.splitwiseclonejava.models.GroupMembers;
-import com.jztchl.splitwiseclonejava.models.Groups;
+import com.jztchl.splitwiseclonejava.models.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -68,6 +65,21 @@ public class EmailService {
 
     }
 
+    public void paymentConfirmedNotification(Settlement settlement) {
+        String subject = "Payment Confirmed";
+        String text = String.format("""
+                Payment of %s has been confirmed by %s.
+                """, settlement.getAmount().toString(), settlement.getPayer().getName());
+        sendEmail(settlement.getExpenseShare().getUserId().getEmail(), subject, text);
+    }
 
+
+    public void expensePaymentsClearedNotification(Expenses expense) {
+        String subject = "All payments have been cleared";
+        String text = String.format("""
+                All payments have been cleared for %s.
+                """, expense.getDescription());
+        sendEmail(expense.getPaidBy().getEmail(), subject, text);
+    }
 }
 

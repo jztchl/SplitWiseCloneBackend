@@ -13,6 +13,7 @@ public class ProfileService {
 
     public ProfileDto getCurrentUser() {
         ProfileDto profile = new ProfileDto();
+        profile.setId(Long.valueOf(jwtService.getCurrentUser().getId()));
         profile.setName(jwtService.getCurrentUser().getName());
         profile.setEmail(jwtService.getCurrentUser().getEmail());
         profile.setProfilePictureUrl(jwtService.getCurrentUser().getProfilePictureUrl());

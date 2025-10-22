@@ -1,0 +1,59 @@
+package com.jztchl.splitwiseclonejava.utility;
+
+import com.jztchl.splitwiseclonejava.models.ExpenseShare;
+import com.jztchl.splitwiseclonejava.models.Settlement;
+import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
+import com.jztchl.splitwiseclonejava.repos.ExpenseShareRepository;
+import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class MiscCalculations {
+    private final SettlementRepository settlementRepository;
+    private final ExpenseShareRepository expenseShareRepository;
+    private final ExpenseRepository expenseRepository;
+    private final EmailService emailService;
+
+    public MiscCalculations(SettlementRepository settlementRepository, ExpenseShareRepository expenseShareRepository
+            , ExpenseRepository expensesRepository, EmailService emailService) {
+        this.settlementRepository = settlementRepository;
+        this.expenseShareRepository = expenseShareRepository;
+        this.expenseRepository = expensesRepository;
+        this.emailService = emailService;
+
+    }
+
+    @Async
+    public void updateStatusExpense(Long expenseShareId) {
+        ExpenseShare share = expenseShareRepository.findById(expenseShareId).orElseThrow(() -> new RuntimeException("Expense share not found"));
+        List<Settlement> settlements = new ArrayList<>();
+        settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, expenseShareId);
+        BigDecimal totalPayment = BigDecimal.valueOf(0);
+        for (Settlement st : settlements) {
+            totalPayment = totalPayment.add(st.getAmount());
+        }
+
+        if (totalPayment.compareTo(share.getAmountOwed()) == 0) {
+            share.setPaid(true);
+            expenseShareRepository.save(share);
+        }
+        List<ExpenseShare> shares = new ArrayList<>();
+        shares = expenseShareRepository.findAllByExpense(share.getExpense());
+        for (ExpenseShare s : shares) {
+            if (!s.isPaid()) {
+                return;
+            }
+
+        }
+        share.getExpense().setIsPaymentsDone(true);
+        expenseRepository.save(share.getExpense());
+        emailService.expensePaymentsClearedNotification(share.getExpense());
+
+
+    }
+}

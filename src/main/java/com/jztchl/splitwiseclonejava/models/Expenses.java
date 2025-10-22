@@ -31,6 +31,8 @@ public class Expenses extends BaseModel {
     @Enumerated(EnumType.STRING)
     private SplitType splitType;
 
+    private Boolean isPaymentsDone = Boolean.FALSE;
+
     @OneToMany(mappedBy = "expense", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExpenseShare> shares = new ArrayList<>();
 
@@ -39,5 +41,6 @@ public class Expenses extends BaseModel {
         PERCENTAGE,
         EXACT
     }
+
 
 }

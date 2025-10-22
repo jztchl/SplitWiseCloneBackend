@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-public class createSettlementDto {
+public class CreateSettlementDto {
     private Long id;
     private String status;
 

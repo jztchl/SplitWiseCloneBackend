@@ -1,15 +1,21 @@
 package com.jztchl.splitwiseclonejava.services;
 
-import com.jztchl.splitwiseclonejava.dtos.settlement.createSettlementDto;
-import com.jztchl.splitwiseclonejava.models.ExpenseShare;
+import com.jztchl.splitwiseclonejava.dtos.settlement.CreateSettlementDto;
+import com.jztchl.splitwiseclonejava.dtos.settlement.ListSettlementDto;
+import com.jztchl.splitwiseclonejava.dtos.settlement.MarkSettlementDto;
+import com.jztchl.splitwiseclonejava.models.Expenses;
 import com.jztchl.splitwiseclonejava.models.Settlement;
 import com.jztchl.splitwiseclonejava.repos.DocRepository;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
 import com.jztchl.splitwiseclonejava.repos.ExpenseShareRepository;
 import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
+import com.jztchl.splitwiseclonejava.utility.EmailService;
+import com.jztchl.splitwiseclonejava.utility.MiscCalculations;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,23 +23,29 @@ import java.util.List;
 public class SettlementService {
 
     private final JwtService jwtService;
+    private final MiscCalculations miscCalculations;
     private final ExpenseShareRepository expenseShareRepository;
     private final ExpenseRepository expenseRepository;
     private final SettlementRepository settlementRepository;
     private final DocRepository docRepository;
+    private final EmailService emailService;
 
 
     public SettlementService(JwtService jwtService, ExpenseShareRepository expenseShareRepository
             , DocRepository docRepository, ExpenseRepository expenseRepository
-            , SettlementRepository settlementRepository) {
+            , SettlementRepository settlementRepository
+            , MiscCalculations miscCalculations, EmailService emailService) {
         this.jwtService = jwtService;
         this.expenseShareRepository = expenseShareRepository;
         this.expenseRepository = expenseRepository;
         this.settlementRepository = settlementRepository;
         this.docRepository = docRepository;
+        this.miscCalculations = miscCalculations;
+        this.emailService = emailService;
+
     }
 
-    public createSettlementDto createSettlement(createSettlementDto dto) {
+    public CreateSettlementDto createSettlement(CreateSettlementDto dto) {
         if (!expenseShareRepository.existsByIdAndUserId(dto.getExpenseShareId(), jwtService.getCurrentUser())) {
             throw new RuntimeException("Expense share not found");
         }
@@ -63,4 +75,38 @@ public class SettlementService {
 
 
     }
+
+    @Transactional
+    public String markSettlmentStatus(MarkSettlementDto dto) {
+        Settlement settlement = settlementRepository.findById(dto.getSettlementId())
+                .orElseThrow(() -> new RuntimeException("Settlement not found"));
+        if (!settlement.getExpense().getPaidBy().equals(jwtService.getCurrentUser())) {
+            throw new RuntimeException("You do not have permission to mark this settlement");
+        }
+        settlement.setStatus(Settlement.SettlementStatus.valueOf(dto.getStatus()));
+        if (Settlement.SettlementStatus.CONFIRMED.equals(settlement.getStatus())) {
+            settlement.setConfirmedAt(LocalDateTime.now());
+        }
+        settlementRepository.save(settlement);
+        emailService.paymentConfirmedNotification(settlement);
+        miscCalculations.updateStatusExpense(settlement.getExpenseShare().getId());
+
+        return "Settlement marked successfully";
+    }
+
+    public List<ListSettlementDto> listSettlements(Long expenseId) {
+        Expenses expense = expenseRepository.findById(expenseId)
+                .orElseThrow(() -> new RuntimeException("Expense not found"));
+        if (expense.getPaidBy().equals(jwtService.getCurrentUser())) {// list all settlements for this expense
+            return settlementRepository.findAllByExpenseId(expenseId);
+        } else {// list only settlements paid by current user
+            return settlementRepository.findAllByExpenseIdAndExpenseShare_UserId(
+                    expenseId,
+                    jwtService.getCurrentUser()
+            );
+        }
+
+    }
+
+
 }
