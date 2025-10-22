@@ -1,6 +1,7 @@
 package com.jztchl.splitwiseclonejava.models;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -13,15 +14,20 @@ import java.util.List;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class Expenses extends BaseModel {
+    @NotNull(message = "Group is required")
     @ManyToOne
     @JoinColumn(name = "group_id", nullable = false)
     private Groups groupId;
+
     private String description;
     private BigDecimal amount;
 
+    @NotNull(message = "Paid by is required")
     @ManyToOne
     @JoinColumn(name = "paid_by", nullable = false)
     private Users paidBy;
+
+    @NotNull(message = "Split type is required")
     @Enumerated(EnumType.STRING)
     private SplitType splitType;
 

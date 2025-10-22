@@ -1,6 +1,7 @@
 package com.jztchl.splitwiseclonejava.models;
 
 import jakarta.persistence.Entity;
+import jakarta.validation.constraints.NotBlank;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -10,5 +11,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Doc extends BaseModel {
+    @NotBlank(message = "Url is required")
     private String url;
 }
