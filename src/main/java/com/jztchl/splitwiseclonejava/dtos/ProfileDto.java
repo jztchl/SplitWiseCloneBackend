@@ -3,6 +3,8 @@ package com.jztchl.splitwiseclonejava.dtos;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 public class ProfileDto {
@@ -11,7 +13,7 @@ public class ProfileDto {
     private String email;
     private String profilePictureUrl;
     private String createdAt;
-    private Double liability;
-    private Double exposure;
+    private BigDecimal liability;
+
 
 }
