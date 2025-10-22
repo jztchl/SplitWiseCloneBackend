@@ -16,4 +16,5 @@ public interface SettlementRepository extends JpaRepository<Settlement, Long> {
 
     List<ListSettlementDto> findAllByExpenseId(Long expenseId);
 
+
 }

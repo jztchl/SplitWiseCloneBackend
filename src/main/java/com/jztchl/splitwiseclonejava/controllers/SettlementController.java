@@ -3,6 +3,7 @@ package com.jztchl.splitwiseclonejava.controllers;
 import com.jztchl.splitwiseclonejava.dtos.settlement.CreateSettlementDto;
 import com.jztchl.splitwiseclonejava.dtos.settlement.ListSettlementDto;
 import com.jztchl.splitwiseclonejava.dtos.settlement.MarkSettlementDto;
+import com.jztchl.splitwiseclonejava.dtos.settlement.SettlementDetailDto;
 import com.jztchl.splitwiseclonejava.services.SettlementService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,11 @@ public class SettlementController {
     @GetMapping("/list-settlement/{id}")
     public List<ListSettlementDto> listSettlement(@PathVariable Long id) {
         return settlementService.listSettlements(id);
+    }
+
+    @GetMapping("/{id}")
+    public SettlementDetailDto getSettlement(@PathVariable Long id) {
+        return settlementService.getSettlement(id);
     }
 
 }

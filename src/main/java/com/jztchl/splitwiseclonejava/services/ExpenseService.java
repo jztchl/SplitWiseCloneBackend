@@ -8,8 +8,10 @@ import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
+import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
 import com.jztchl.splitwiseclonejava.utility.EmailService;
 
+import com.jztchl.splitwiseclonejava.utility.MiscCalculations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,14 +32,18 @@ public class ExpenseService {
     private final GroupRepository groupRepository;
     private final GroupMembersRepository groupMembersRepository;
     private final EmailService emailService;
+    private final MiscCalculations miscCalculations;
+
 
     public ExpenseService(JwtService jwtService, ExpenseRepository expenseRepository, GroupRepository groupRepository,
-                          GroupMembersRepository groupMembersRepository, EmailService emailService) {
+                          GroupMembersRepository groupMembersRepository, EmailService emailService,
+                          MiscCalculations miscCalculations) {
         this.jwtService = jwtService;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
         this.groupMembersRepository = groupMembersRepository;
         this.emailService = emailService;
+        this.miscCalculations = miscCalculations;
     }
 
     @Transactional
@@ -209,7 +215,14 @@ public class ExpenseService {
             shareDto.setId(share.getId());
             shareDto.setUserId(Long.valueOf(share.getUserId().getId()));
             shareDto.setAmountOwed(share.getAmountOwed());
-            shareDto.setPaid(share.isPaid());
+            if (share.isPaid()) {
+                shareDto.setPaid(true);
+                shareDto.setAmountRemaining(BigDecimal.valueOf(0));
+            } else {
+                shareDto.setPaid(false);
+                BigDecimal remainingAmount = share.getAmountOwed().subtract(miscCalculations.calculateAmountTillNow(share));
+                shareDto.setAmountRemaining(remainingAmount);
+            }
             shareDtos.add(shareDto);
         }
         dto.setShares(shareDtos);
@@ -228,4 +241,6 @@ public class ExpenseService {
 
         return expenseRepository.findAllByGroupId(group);
     }
+
+
 }

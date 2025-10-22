@@ -3,6 +3,7 @@ package com.jztchl.splitwiseclonejava.services;
 import com.jztchl.splitwiseclonejava.dtos.settlement.CreateSettlementDto;
 import com.jztchl.splitwiseclonejava.dtos.settlement.ListSettlementDto;
 import com.jztchl.splitwiseclonejava.dtos.settlement.MarkSettlementDto;
+import com.jztchl.splitwiseclonejava.dtos.settlement.SettlementDetailDto;
 import com.jztchl.splitwiseclonejava.models.Expenses;
 import com.jztchl.splitwiseclonejava.models.Settlement;
 import com.jztchl.splitwiseclonejava.repos.DocRepository;
@@ -11,7 +12,6 @@ import com.jztchl.splitwiseclonejava.repos.ExpenseShareRepository;
 import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
 import com.jztchl.splitwiseclonejava.utility.EmailService;
 import com.jztchl.splitwiseclonejava.utility.MiscCalculations;
-import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -76,7 +76,7 @@ public class SettlementService {
 
     }
 
-    @Transactional
+
     public String markSettlmentStatus(MarkSettlementDto dto) {
         Settlement settlement = settlementRepository.findById(dto.getSettlementId())
                 .orElseThrow(() -> new RuntimeException("Settlement not found"));
@@ -109,4 +109,21 @@ public class SettlementService {
     }
 
 
+    public SettlementDetailDto getSettlement(Long id) {
+        Settlement settlement = settlementRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Settlement not found"));
+        if (!((settlement.getExpense().getPaidBy().equals(jwtService.getCurrentUser()) ||
+                settlement.getExpenseShare().getUserId().equals(jwtService.getCurrentUser())))) {
+            throw new RuntimeException("You do not have permission to view this settlement");
+        }
+        SettlementDetailDto dto = new SettlementDetailDto();
+        dto.setId(settlement.getId());
+        dto.setStatus(settlement.getStatus().toString());
+        dto.setNote(settlement.getNote());
+        dto.setPaidBy(settlement.getPayer().getName());
+        dto.setPaidById(Long.valueOf(settlement.getPayer().getId()));
+        dto.setExpenseShareId(settlement.getExpenseShare().getId());
+        dto.setPaymentRef(settlement.getPaymentRef().getUrl());
+        return dto;
+    }
 }

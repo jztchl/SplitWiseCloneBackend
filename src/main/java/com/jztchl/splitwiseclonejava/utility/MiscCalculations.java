@@ -31,12 +31,7 @@ public class MiscCalculations {
     @Async
     public void updateStatusExpense(Long expenseShareId) {
         ExpenseShare share = expenseShareRepository.findById(expenseShareId).orElseThrow(() -> new RuntimeException("Expense share not found"));
-        List<Settlement> settlements = new ArrayList<>();
-        settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, expenseShareId);
-        BigDecimal totalPayment = BigDecimal.valueOf(0);
-        for (Settlement st : settlements) {
-            totalPayment = totalPayment.add(st.getAmount());
-        }
+        BigDecimal totalPayment = calculateAmountTillNow(share);
 
         if (totalPayment.compareTo(share.getAmountOwed()) == 0) {
             share.setPaid(true);
@@ -54,6 +49,15 @@ public class MiscCalculations {
         expenseRepository.save(share.getExpense());
         emailService.expensePaymentsClearedNotification(share.getExpense());
 
+    }
 
+    public BigDecimal calculateAmountTillNow(ExpenseShare share) {
+        List<Settlement> settlements = new ArrayList<>();
+        settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, share.getId());
+        BigDecimal totalPayment = BigDecimal.valueOf(0);
+        for (Settlement st : settlements) {
+            totalPayment = totalPayment.add(st.getAmount());
+        }
+        return totalPayment;
     }
 }
