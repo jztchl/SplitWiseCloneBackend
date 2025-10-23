@@ -1,0 +1,31 @@
+### create settlement
+POST http://127.0.0.1:8080/api/settlement/create
+Content-Type:application/json
+Authorization: Bearer  {{tokenCode}}
+
+{
+  "expenseShareId": 15,
+  "expenseId": 37,
+  "amount": 128.50,
+  "paymentRef": 4,
+  "note": "full amount"
+}
+
+### list settlement
+#### the id passed is the expense id, if expense owner can see all settlement of expense , else only paid
+GET http://127.0.0.1:8080/api/settlement/list-settlement/1
+Authorization: Bearer  {{tokenCode}}
+
+###mark settlement status
+###only the expense owner can mark this
+POST http://127.0.0.1:8080/api/settlement/mark-settlement-status
+Content-Type:application/json
+Authorization: Bearer  {{tokenCode}}
+
+
+{
+  "settlementId": 12,
+  "status": "CONFIRMED"
+}
+
+

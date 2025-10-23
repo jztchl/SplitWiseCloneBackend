@@ -16,7 +16,6 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -49,8 +48,7 @@ public class SettlementService {
         if (!expenseShareRepository.existsByIdAndUserId(dto.getExpenseShareId(), jwtService.getCurrentUser())) {
             throw new RuntimeException("Expense share not found");
         }
-        List<Settlement> settlements = new ArrayList<>();
-        settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, dto.getExpenseShareId());
+        List<Settlement> settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, dto.getExpenseShareId());
 
         BigDecimal totalPayment = BigDecimal.valueOf(0);
         for (Settlement settlement : settlements) {
@@ -78,7 +76,7 @@ public class SettlementService {
     }
 
 
-    public String markSettlmentStatus(MarkSettlementDto dto) {
+    public String markSettlementStatus(MarkSettlementDto dto) {
         Settlement settlement = settlementRepository.findById(dto.getSettlementId())
                 .orElseThrow(() -> new RuntimeException("Settlement not found"));
         if (!settlement.getExpense().getPaidBy().equals(jwtService.getCurrentUser())) {

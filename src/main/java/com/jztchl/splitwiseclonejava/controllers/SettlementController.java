@@ -25,9 +25,9 @@ public class SettlementController {
         return settlementService.createSettlement(dto);
     }
 
-    @PostMapping("/mark-settlment-status")
-    public String markSettlemntStatus(@Valid @RequestBody MarkSettlementDto dto) {
-        return settlementService.markSettlmentStatus(dto);
+    @PostMapping("/mark-settlement-status")
+    public String markSettlementStatus(@Valid @RequestBody MarkSettlementDto dto) {
+        return settlementService.markSettlementStatus(dto);
 
     }
 

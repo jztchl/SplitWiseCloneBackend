@@ -9,7 +9,6 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -37,8 +36,7 @@ public class MiscCalculations {
             share.setPaid(true);
             expenseShareRepository.save(share);
         }
-        List<ExpenseShare> shares = new ArrayList<>();
-        shares = expenseShareRepository.findAllByExpense(share.getExpense());
+        List<ExpenseShare> shares = expenseShareRepository.findAllByExpense(share.getExpense());
         for (ExpenseShare s : shares) {
             if (!s.isPaid()) {
                 return;
@@ -52,8 +50,7 @@ public class MiscCalculations {
     }
 
     public BigDecimal calculateAmountTillNow(ExpenseShare share) {
-        List<Settlement> settlements = new ArrayList<>();
-        settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, share.getId());
+        List<Settlement> settlements = settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, share.getId());
         BigDecimal totalPayment = BigDecimal.valueOf(0);
         for (Settlement st : settlements) {
             totalPayment = totalPayment.add(st.getAmount());
