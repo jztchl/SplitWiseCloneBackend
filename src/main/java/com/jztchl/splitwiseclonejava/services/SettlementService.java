@@ -70,6 +70,7 @@ public class SettlementService {
         settlement = settlementRepository.save(settlement);
         dto.setId(settlement.getId());
         dto.setStatus(String.valueOf(settlement.getStatus()));
+        emailService.newSettlementNotification(settlement.getId());
 
         return dto;
 

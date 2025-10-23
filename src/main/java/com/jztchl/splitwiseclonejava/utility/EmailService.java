@@ -98,5 +98,15 @@ public class EmailService {
                 """, expense.getDescription());
         sendEmail(expense.getPaidBy().getEmail(), subject, text);
     }
+
+    @Async
+    public void newSettlementNotification(Long settlementId) {
+        Settlement settlement = settlementRepository.findById(settlementId).orElseThrow(() -> new RuntimeException("Settlement not found"));
+        String subject = "New settlement";
+        String text = String.format("""
+                A new settlement has been made for %s.
+                """, settlement.getExpense().getDescription());
+        sendEmail(settlement.getExpense().getPaidBy().getEmail(), subject, text);
+    }
 }
 
