@@ -1,6 +1,9 @@
 package com.jztchl.splitwiseclonejava.utility;
 
 import com.jztchl.splitwiseclonejava.models.*;
+import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
+import com.jztchl.splitwiseclonejava.repos.GroupRepository;
+import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -10,10 +13,17 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailService {
     private final JavaMailSender javaMailSender;
+    private final GroupRepository groupRepository;
+    private final ExpenseRepository expenseRepository;
+    private final SettlementRepository settlementRepository;
 
-    @Autowired
-    public EmailService(JavaMailSender javaMailSender) {
+
+    public EmailService(JavaMailSender javaMailSender, GroupRepository groupRepository,
+                        ExpenseRepository expenseRepository, SettlementRepository settlementRepository) {
         this.javaMailSender = javaMailSender;
+        this.groupRepository = groupRepository;
+        this.expenseRepository = expenseRepository;
+        this.settlementRepository = settlementRepository;
     }
 
     @Async
@@ -30,7 +40,9 @@ public class EmailService {
         }
     }
 
-    public void addedToGroupNotification(Groups groups) {
+    @Async
+    public void addedToGroupNotification(Long groupId) {
+        Groups groups = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
         final String subject = "You have been added to a group";
         String text = String.format("You have been added to %s", groups.getGroupName());
         for (GroupMembers member : groups.getMembers()) {
@@ -43,7 +55,9 @@ public class EmailService {
 
     }
 
-    public void newExpenseSharedNotification(Expenses expense) {
+    @Async
+    public void newExpenseSharedNotification(Long expenseId) {
+        Expenses expense = expenseRepository.findById(expenseId).orElseThrow(() -> new RuntimeException("Expense not found"));
         String subject = "New expense shared with you";
         for (ExpenseShare share : expense.getShares()) {
             String text = String.format("""
@@ -65,7 +79,9 @@ public class EmailService {
 
     }
 
-    public void paymentConfirmedNotification(Settlement settlement) {
+    @Async
+    public void paymentConfirmedNotification(Long settlementId) {
+        Settlement settlement = settlementRepository.findById(settlementId).orElseThrow(() -> new RuntimeException("Settlement not found"));
         String subject = "Payment Confirmed";
         String text = String.format("""
                 Payment of %s has been confirmed by %s.
@@ -73,8 +89,9 @@ public class EmailService {
         sendEmail(settlement.getExpenseShare().getUserId().getEmail(), subject, text);
     }
 
-
-    public void expensePaymentsClearedNotification(Expenses expense) {
+    @Async
+    public void expensePaymentsClearedNotification(Long expenseId) {
+        Expenses expense = expenseRepository.findById(expenseId).orElseThrow(() -> new RuntimeException("Expense not found"));
         String subject = "All payments have been cleared";
         String text = String.format("""
                 All payments have been cleared for %s.

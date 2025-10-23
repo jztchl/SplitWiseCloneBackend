@@ -61,19 +61,19 @@ public class GroupService {
         groupMember.setGroupId(newGroup);
         groupMember.setUserId(jwtService.getCurrentUser());
         members.add(groupMember);
-        Groups finalNewGroup = newGroup;
+        groupMembersRepository.saveAll(members);
+        Long newGroupId = newGroup.getId();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 try {
-                    emailService.addedToGroupNotification(finalNewGroup);
+                    emailService.addedToGroupNotification(newGroupId);
                     System.out.println("Group created successfully");
                 } catch (Exception e) {
                     System.err.println("Error in post-commit processing: " + e.getMessage());
                 }
             }
         });
-        groupMembersRepository.saveAll(members);
         return newGroup;
     }
 

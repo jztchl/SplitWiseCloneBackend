@@ -88,7 +88,7 @@ public class SettlementService {
             settlement.setConfirmedAt(LocalDateTime.now());
         }
         settlementRepository.save(settlement);
-        emailService.paymentConfirmedNotification(settlement);
+        emailService.paymentConfirmedNotification(settlement.getId());
         miscCalculations.updateStatusExpense(settlement.getExpenseShare().getId());
 
         return "Settlement marked successfully";

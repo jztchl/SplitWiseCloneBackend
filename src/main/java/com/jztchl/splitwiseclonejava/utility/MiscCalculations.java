@@ -47,7 +47,7 @@ public class MiscCalculations {
         }
         share.getExpense().setIsPaymentsDone(true);
         expenseRepository.save(share.getExpense());
-        emailService.expensePaymentsClearedNotification(share.getExpense());
+        emailService.expensePaymentsClearedNotification(share.getExpense().getId());
 
     }
 

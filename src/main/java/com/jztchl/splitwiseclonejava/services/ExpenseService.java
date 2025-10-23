@@ -178,21 +178,21 @@ public class ExpenseService {
             }
 
         }
-
-        Expenses finalExpense = expense;
+        expenseRepository.save(expense);
+        Long finalExpenseId = expense.getId();
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
                 try {
 
-                    emailService.newExpenseSharedNotification(finalExpense);
+                    emailService.newExpenseSharedNotification(finalExpenseId);
                 } catch (Exception e) {
                     System.err.println("Error in post-commit processing: " + e.getMessage());
                 }
             }
         });
         expenseDetailDto.setShares(shareDtos);
-        expenseRepository.save(expense);
+
         return expenseDetailDto;
     }
 
