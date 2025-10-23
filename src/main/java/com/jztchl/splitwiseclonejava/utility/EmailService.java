@@ -42,7 +42,7 @@ public class EmailService {
 
     @Async
     public void addedToGroupNotification(Long groupId) {
-        Groups groups = groupRepository.findById(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
+        Groups groups = groupRepository.findByIdWithMembers(groupId).orElseThrow(() -> new RuntimeException("Group not found"));
         final String subject = "You have been added to a group";
         String text = String.format("You have been added to %s", groups.getGroupName());
         for (GroupMembers member : groups.getMembers()) {

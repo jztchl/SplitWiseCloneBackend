@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface GroupRepository extends JpaRepository<Groups, Long> {
@@ -21,4 +22,7 @@ public interface GroupRepository extends JpaRepository<Groups, Long> {
     @Query("SELECT g.id AS id, g.groupName AS groupName, g.createdBy.name AS groupOwner " +
             "FROM Groups g WHERE g.createdBy = :owner")
     List<GroupListDto> findAllByOwner(@Param("owner") Users owner);
+
+    @Query("SELECT g FROM Groups g LEFT JOIN FETCH g.members WHERE g.id = :id")
+    Optional<Groups> findByIdWithMembers(@Param("id") Long id);
 }
