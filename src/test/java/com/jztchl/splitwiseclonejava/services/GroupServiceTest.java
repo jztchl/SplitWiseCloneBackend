@@ -1,0 +1,129 @@
+package com.jztchl.splitwiseclonejava.services;
+
+import com.jztchl.splitwiseclonejava.dtos.group.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.models.GroupMembers;
+import com.jztchl.splitwiseclonejava.models.Groups;
+import com.jztchl.splitwiseclonejava.models.Users;
+import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
+import com.jztchl.splitwiseclonejava.repos.GroupRepository;
+import com.jztchl.splitwiseclonejava.repos.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("GroupService Test")
+class GroupServiceTest {
+    @Mock
+    private GroupRepository groupRepository;
+    @Mock
+    private JwtService jwtService;
+    @Mock
+    private UserRepository userRepository;
+    @Mock
+    private GroupMembersRepository groupMembersRepository;
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
+    private Users currentuser;
+    private Users testUser2;
+    private Users testUser3;
+
+
+    @BeforeEach
+    void setUp() {
+        this.currentuser = new Users();
+        this.currentuser.setId(1);
+        this.currentuser.setName("User1");
+        this.currentuser.setEmail("currentuser@example.com");
+
+        this.testUser2 = new Users();
+        this.testUser2.setId(2);
+        this.testUser2.setName("User2");
+        this.testUser2.setEmail("testuser2@example.com");
+
+        this.testUser3 = new Users();
+        this.testUser3.setId(3);
+        this.testUser3.setName("User3");
+        this.testUser3.setEmail("testuser3@example.com");
+
+
+    }
+
+    @InjectMocks
+    private GroupService groupService;
+
+    @Nested
+    @DisplayName("Test Create Group")
+    class CreateGroupTest {
+
+        @Test
+        @DisplayName("Should create a Group Successfully when valid users are presented")
+        void createGroupTestValidUsers() {
+            //Given
+            CreateGroupDto groupDto = new CreateGroupDto();
+            groupDto.setGroupDescription("Test Group Description");
+            groupDto.setGroupName("Test Group");
+            List<String> members = List.of(testUser2.getEmail(), testUser3.getEmail());
+            groupDto.setMembers(members);
+            Groups group = new Groups();
+            group.setId(1L);
+            group.setGroupName("Test Group");
+            group.setDescription("Test Group Description");
+            group.setCreatedBy(currentuser);
+
+            GroupMembers groupMember1 = new GroupMembers();
+            groupMember1.setGroupId(group);
+            groupMember1.setUserId(currentuser);
+
+            GroupMembers groupMember2 = new GroupMembers();
+            groupMember2.setGroupId(group);
+            groupMember2.setUserId(testUser2);
+
+            GroupMembers groupMember3 = new GroupMembers();
+            groupMember3.setGroupId(group);
+            groupMember3.setUserId(testUser3);
+
+
+            List<GroupMembers> memberList = List.of(groupMember1, groupMember2, groupMember3);
+            group.setMembers(memberList);
+
+
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(userRepository.findByEmail(testUser2.getEmail())).thenReturn(Optional.of(testUser2));
+            when(userRepository.findByEmail(testUser3.getEmail())).thenReturn(Optional.of(testUser3));
+            when(groupRepository.save(any(Groups.class))).thenReturn(group);
+
+            //When
+            Groups newGroup = groupService.createGroup(groupDto);
+
+
+            //Then
+            assertEquals(group.getId(), newGroup.getId());
+            assertEquals(group.getGroupName(), newGroup.getGroupName());
+            assertEquals(group.getDescription(), newGroup.getDescription());
+            assertEquals(group.getCreatedBy(), newGroup.getCreatedBy());
+            verify(groupRepository).save(any(Groups.class));
+            verify(groupMembersRepository).saveAll(any());
+
+
+        }
+
+    }
+}

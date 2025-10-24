@@ -4,17 +4,16 @@ import com.jztchl.splitwiseclonejava.dtos.group.CreateGroupDto;
 import com.jztchl.splitwiseclonejava.dtos.group.GroupDetailsDto;
 import com.jztchl.splitwiseclonejava.dtos.group.GroupListDto;
 import com.jztchl.splitwiseclonejava.dtos.group.GroupMembersDto;
+import com.jztchl.splitwiseclonejava.events.GroupCreatedEvent;
 import com.jztchl.splitwiseclonejava.models.GroupMembers;
 import com.jztchl.splitwiseclonejava.models.Groups;
 import com.jztchl.splitwiseclonejava.models.Users;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
 import com.jztchl.splitwiseclonejava.repos.UserRepository;
-import com.jztchl.splitwiseclonejava.utility.EmailService;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
@@ -28,16 +27,16 @@ public class GroupService {
     private final JwtService jwtService;
     private final UserRepository userRepository;
     private final GroupMembersRepository groupMembersRepository;
-    private final EmailService emailService;
+    private final ApplicationEventPublisher eventPublisher;
     private final Logger logger = org.slf4j.LoggerFactory.getLogger(GroupService.class);
 
     public GroupService(GroupRepository groupRepository, JwtService jwtService, UserRepository userRepository,
-                        GroupMembersRepository groupMembersRepository, EmailService emailService) {
+                        GroupMembersRepository groupMembersRepository, ApplicationEventPublisher eventPublisher) {
         this.groupRepository = groupRepository;
         this.jwtService = jwtService;
         this.userRepository = userRepository;
         this.groupMembersRepository = groupMembersRepository;
-        this.emailService = emailService;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -64,19 +63,9 @@ public class GroupService {
         groupMember.setUserId(jwtService.getCurrentUser());
         members.add(groupMember);
         groupMembersRepository.saveAll(members);
-        Long newGroupId = newGroup.getId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                try {
-                    emailService.addedToGroupNotification(newGroupId);
-                    System.out.println("Group created successfully");
-                } catch (Exception e) {
-                    System.err.println("Error in post-commit processing: " + e.getMessage());
-                }
-            }
-        });
-        logger.info("Group created by{} successfully{}", jwtService.getCurrentUser().getName(), newGroup.getGroupName());
+
+        eventPublisher.publishEvent(new GroupCreatedEvent(this, newGroup.getId()));
+        logger.info("Group '{}' created successfully by '{}'", newGroup.getGroupName(), jwtService.getCurrentUser().getName());
         return newGroup;
     }
 
@@ -88,6 +77,10 @@ public class GroupService {
             logger.info("{} is not a member of group {}", currentUser.getName(), group.getGroupName());
             throw new RuntimeException("You are not a member of this group");
         }
+        return getGroupDetailsDto(group);
+    }
+
+    private static GroupDetailsDto getGroupDetailsDto(Groups group) {
         GroupDetailsDto groupDetailsDto = new GroupDetailsDto();
         groupDetailsDto.setId(group.getId());
         groupDetailsDto.setName(group.getGroupName());
