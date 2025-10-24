@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,6 +29,7 @@ public class GroupService {
     private final UserRepository userRepository;
     private final GroupMembersRepository groupMembersRepository;
     private final EmailService emailService;
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(GroupService.class);
 
     public GroupService(GroupRepository groupRepository, JwtService jwtService, UserRepository userRepository,
                         GroupMembersRepository groupMembersRepository, EmailService emailService) {
@@ -74,6 +76,7 @@ public class GroupService {
                 }
             }
         });
+        logger.info("Group created by{} successfully{}", jwtService.getCurrentUser().getName(), newGroup.getGroupName());
         return newGroup;
     }
 
@@ -82,6 +85,7 @@ public class GroupService {
         Groups group = groupRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", id)));
         if (!groupMembersRepository.existsByGroupIdAndUserId(group, currentUser)) {
+            logger.info("{} is not a member of group {}", currentUser.getName(), group.getGroupName());
             throw new RuntimeException("You are not a member of this group");
         }
         GroupDetailsDto groupDetailsDto = new GroupDetailsDto();
@@ -110,6 +114,7 @@ public class GroupService {
         Groups group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", groupId)));
         if (!jwtService.getCurrentUser().equals(group.getCreatedBy())) {
+            logger.warn("User:{} is not the creator of group {}", jwtService.getCurrentUser().getName(), group.getGroupName());
             throw new RuntimeException("Only the creator of the group can add members");
         }
         if (!(members == null)) {

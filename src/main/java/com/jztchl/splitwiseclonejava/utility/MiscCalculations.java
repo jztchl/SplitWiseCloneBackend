@@ -7,6 +7,7 @@ import com.jztchl.splitwiseclonejava.repos.ExpenseShareRepository;
 import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,6 +18,7 @@ public class MiscCalculations {
     private final ExpenseShareRepository expenseShareRepository;
     private final ExpenseRepository expenseRepository;
     private final EmailService emailService;
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(MiscCalculations.class);
 
     public MiscCalculations(SettlementRepository settlementRepository, ExpenseShareRepository expenseShareRepository
             , ExpenseRepository expensesRepository, EmailService emailService) {
@@ -46,6 +48,8 @@ public class MiscCalculations {
         share.getExpense().setIsPaymentsDone(true);
         expenseRepository.save(share.getExpense());
         emailService.expensePaymentsClearedNotification(share.getExpense().getId());
+        logger.info("Expense  id: {} payments cleared successfully", share.getId());
+
 
     }
 

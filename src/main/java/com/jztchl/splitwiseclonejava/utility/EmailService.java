@@ -4,11 +4,11 @@ import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
 import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
 
 @Service
 public class EmailService {
@@ -16,6 +16,7 @@ public class EmailService {
     private final GroupRepository groupRepository;
     private final ExpenseRepository expenseRepository;
     private final SettlementRepository settlementRepository;
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(EmailService.class);
 
 
     public EmailService(JavaMailSender javaMailSender, GroupRepository groupRepository,
@@ -35,6 +36,8 @@ public class EmailService {
             message.setText(text);
             javaMailSender.send(message);
             System.out.println("Email sent to:" + to);
+            logger.info("Email sent to:{}", to);
+
         } catch (Exception e) {
             System.out.println(e.getMessage() + "Failed to send email to:" + to);
         }

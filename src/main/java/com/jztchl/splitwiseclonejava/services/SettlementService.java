@@ -18,6 +18,9 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.slf4j.Logger;
+
+
 @Service
 public class SettlementService {
 
@@ -28,6 +31,7 @@ public class SettlementService {
     private final SettlementRepository settlementRepository;
     private final DocRepository docRepository;
     private final EmailService emailService;
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(SettlementService.class);
 
 
     public SettlementService(JwtService jwtService, ExpenseShareRepository expenseShareRepository
@@ -55,6 +59,7 @@ public class SettlementService {
             totalPayment = totalPayment.add(settlement.getAmount());
         }
         if (totalPayment.compareTo(dto.getAmount()) > 0) {
+            logger.warn("Total payment cannot exceed the amount to be paid expenseId: {}", dto.getExpenseId());
             throw new RuntimeException("Total payment cannot exceed the amount to be paid");
         }
 
@@ -80,6 +85,7 @@ public class SettlementService {
         Settlement settlement = settlementRepository.findById(dto.getSettlementId())
                 .orElseThrow(() -> new RuntimeException("Settlement not found"));
         if (!settlement.getExpense().getPaidBy().equals(jwtService.getCurrentUser())) {
+            logger.warn("User:{} is not the payer of expense:{}", jwtService.getCurrentUser().getName(), settlement.getExpense().getDescription());
             throw new RuntimeException("You do not have permission to mark this settlement");
         }
         settlement.setStatus(Settlement.SettlementStatus.valueOf(dto.getStatus()));
@@ -97,6 +103,7 @@ public class SettlementService {
         Expenses expense = expenseRepository.findById(expenseId)
                 .orElseThrow(() -> new RuntimeException("Expense not found"));
         if (expense.getPaidBy().equals(jwtService.getCurrentUser())) {// list all settlements for this expense
+
             return settlementRepository.findAllByExpenseId(expenseId);
         } else {// list only settlements paid by current user
             return settlementRepository.findAllByExpenseIdAndExpenseShare_UserId(

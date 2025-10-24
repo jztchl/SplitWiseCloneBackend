@@ -10,11 +10,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.slf4j.Logger;
 
 @RestController
 @RequestMapping("/api/docs")
 @RequiredArgsConstructor
 public class DocController {
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(DocController.class);
 
     private final DocRepository docRepository;
     private final FileStorageService fileStorageService;
@@ -25,6 +27,7 @@ public class DocController {
         Doc doc = new Doc();
         doc.setUrl(fileUrl);
         docRepository.save(doc);
+        logger.info("File uploaded: {}", file.getOriginalFilename());
         return ResponseEntity.ok(doc);
     }
 }

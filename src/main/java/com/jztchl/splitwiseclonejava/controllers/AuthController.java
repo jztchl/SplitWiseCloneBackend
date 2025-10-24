@@ -12,13 +12,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.slf4j.Logger;
+
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final Logger logger=org.slf4j.LoggerFactory.getLogger(AuthController.class);
+    private final Logger logger = org.slf4j.LoggerFactory.getLogger(AuthController.class);
 
     private final UserRepository userRepo;
     private final PasswordEncoder encoder;
@@ -40,6 +41,7 @@ public class AuthController {
             throw new RuntimeException("Invalid credentials");
 
         String token = jwtService.generateToken(user.getEmail());
+        logger.info("{} logged in", user.getEmail());
         return Map.of("token", token);
     }
 }
