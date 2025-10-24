@@ -154,7 +154,12 @@ class GroupServiceTest {
             verify(groupMembersRepository, never()).saveAll(any());
             verify(eventPublisher, never()).publishEvent(any());
         }
+    }
 
+
+    @Nested
+    @DisplayName("Test Listing Groups")
+    class ListGroupsTest {
 
         @Test
         @DisplayName("Should return a list of groups for a user with groups")
@@ -192,7 +197,11 @@ class GroupServiceTest {
             assertTrue(result.isEmpty());
             verify(groupRepository).findAllGroupListsByMember(testUser2);
         }
+    }
 
+    @Nested
+    @DisplayName("Test Get  Group By Id")
+    class GetGroupByIdTest {
         @Test
         @DisplayName("Should return a valid group if present and have access to group")
         void getGroupById_WithValidGroupAndAccess_ShouldReturnGroup() {
@@ -267,6 +276,11 @@ class GroupServiceTest {
             });
             assertEquals("You are not a member of this group", exception.getMessage());
         }
+    }
+
+    @Nested
+    @DisplayName("Test Adding Member to Group")
+    class AddMemberToGroupTest {
 
         @Test
         @DisplayName("Should add a valid user to group successfully")
