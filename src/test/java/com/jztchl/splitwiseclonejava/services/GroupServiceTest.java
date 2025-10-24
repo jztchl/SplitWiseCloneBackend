@@ -1,6 +1,7 @@
 package com.jztchl.splitwiseclonejava.services;
 
 import com.jztchl.splitwiseclonejava.dtos.group.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupListDto;
 import com.jztchl.splitwiseclonejava.models.GroupMembers;
 import com.jztchl.splitwiseclonejava.models.Groups;
 import com.jztchl.splitwiseclonejava.models.Users;
@@ -147,10 +148,48 @@ class GroupServiceTest {
             assertEquals(String.format("User not found email: %s", invalidEmail), exception.getMessage());
 
 
-            verify(groupRepository, times(1)).save(any(Groups.class));
+            // The service should fail fast before attempting to save the group
+            verify(groupRepository, never()).save(any(Groups.class));
             verify(groupMembersRepository, never()).saveAll(any());
             verify(eventPublisher, never()).publishEvent(any());
         }
 
+
+        @Test
+        @DisplayName("Should return a list of groups for a user with groups")
+        void getAllGroups_ForUserWithGroups_ShouldReturnGroupList() {
+            // Given
+            GroupListDto dto1 = mock(GroupListDto.class);
+            GroupListDto dto2 = mock(GroupListDto.class);
+            List<GroupListDto> mockGroupList = List.of(dto1, dto2);
+
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(groupRepository.findAllGroupListsByMember(currentuser)).thenReturn(mockGroupList);
+
+            // When
+            List<GroupListDto> result = groupService.getAllGroups();
+
+            // Then
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            assertSame(mockGroupList, result);
+            verify(groupRepository).findAllGroupListsByMember(currentuser);
+        }
+
+        @Test
+        @DisplayName("Should return an empty list for a user with no groups")
+        void getAllGroups_ForUserWithNoGroups_ShouldReturnEmptyList() {
+            // Given
+            when(jwtService.getCurrentUser()).thenReturn(testUser2);
+            when(groupRepository.findAllGroupListsByMember(testUser2)).thenReturn(List.of());
+
+            // When
+            List<GroupListDto> result = groupService.getAllGroups();
+
+            // Then
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            verify(groupRepository).findAllGroupListsByMember(testUser2);
+        }
     }
 }

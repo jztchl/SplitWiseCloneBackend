@@ -103,6 +103,7 @@ public class GroupService {
         return groupRepository.findAllGroupListsByMember(currentUser);
     }
 
+    @Transactional
     public void addMemberToGroup(Long groupId, List<String> members) {
         Groups group = groupRepository.findById(groupId)
                 .orElseThrow(() -> new RuntimeException(String.format("Group not found id: %d", groupId)));
