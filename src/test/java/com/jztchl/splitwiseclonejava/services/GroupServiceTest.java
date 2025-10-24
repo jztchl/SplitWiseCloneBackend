@@ -23,8 +23,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -74,8 +73,8 @@ class GroupServiceTest {
     class CreateGroupTest {
 
         @Test
-        @DisplayName("Should create a Group Successfully when valid users are presented")
-        void createGroupTestValidUsers() {
+        @DisplayName("Should create a group successfully with valid members")
+        void createGroup_WithValidMembers_ShouldSucceed() {
             //Given
             CreateGroupDto groupDto = new CreateGroupDto();
             groupDto.setGroupDescription("Test Group Description");
@@ -119,10 +118,38 @@ class GroupServiceTest {
             assertEquals(group.getGroupName(), newGroup.getGroupName());
             assertEquals(group.getDescription(), newGroup.getDescription());
             assertEquals(group.getCreatedBy(), newGroup.getCreatedBy());
-            verify(groupRepository).save(any(Groups.class));
-            verify(groupMembersRepository).saveAll(any());
+            verify(groupRepository, times(1)).save(any(Groups.class));
+            verify(groupMembersRepository, times(1)).saveAll(any());
 
 
+        }
+
+        @Test
+        @DisplayName("Should throw RuntimeException when a member email does not exist")
+        void createGroup_WithInvalidMember_ShouldThrowException() {
+            // Given
+            CreateGroupDto groupDto = new CreateGroupDto();
+            groupDto.setGroupDescription("Test Group Description");
+            groupDto.setGroupName("Test Group With Invalid Member");
+            String invalidEmail = "nonexistent@example.com";
+            List<String> members = List.of(testUser2.getEmail(), invalidEmail);
+            groupDto.setMembers(members);
+
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(userRepository.findByEmail(testUser2.getEmail())).thenReturn(Optional.of(testUser2));
+            when(userRepository.findByEmail(invalidEmail)).thenReturn(Optional.empty());
+
+            // When & Then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                groupService.createGroup(groupDto);
+            });
+
+            assertEquals(String.format("User not found email: %s", invalidEmail), exception.getMessage());
+
+
+            verify(groupRepository, times(1)).save(any(Groups.class));
+            verify(groupMembersRepository, never()).saveAll(any());
+            verify(eventPublisher, never()).publishEvent(any());
         }
 
     }
