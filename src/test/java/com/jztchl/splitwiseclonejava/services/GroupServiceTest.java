@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -265,6 +266,57 @@ class GroupServiceTest {
                 groupService.getGroupById(groupId);
             });
             assertEquals("You are not a member of this group", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should add a valid user to group successfully")
+        void addMemberToGroup_WithValidUser_ShouldSucceed() {
+            //Given
+            Long groupId = 1L;
+            List<String> members = List.of(testUser2.getEmail());
+            Groups group = new Groups();
+            group.setId(groupId);
+            group.setGroupName("Test Group");
+            group.setDescription("Test Group Description");
+            group.setCreatedBy(currentuser);
+
+            when(userRepository.findByEmail(testUser2.getEmail())).thenReturn(Optional.of(testUser2));
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+            when(groupMembersRepository.existsByGroupIdAndUserId(group, testUser2)).thenReturn(false);
+
+            //When
+            groupService.addMemberToGroup(groupId, members);
+
+            //Then
+            verify(groupMembersRepository, times(1)).saveAll(any());
+
+        }
+
+        @Test
+        @DisplayName("Should return exceptionfor existing user")
+        void addMemberToGroup_WithExisitingUser_ShouldThrow() {
+            //Given
+            Long groupId = 1L;
+            List<String> members = List.of(testUser2.getEmail());
+            Groups group = new Groups();
+            group.setId(groupId);
+            group.setGroupName("Test Group");
+            group.setDescription("Test Group Description");
+            group.setCreatedBy(currentuser);
+
+            when(userRepository.findByEmail(testUser2.getEmail())).thenReturn(Optional.of(testUser2));
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+            when(groupMembersRepository.existsByGroupIdAndUserId(group, testUser2)).thenReturn(true);
+
+            //When & Then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                groupService.addMemberToGroup(groupId, members);
+            });
+
+            assertEquals("User is already present", exception.getMessage());
+
         }
 
 
