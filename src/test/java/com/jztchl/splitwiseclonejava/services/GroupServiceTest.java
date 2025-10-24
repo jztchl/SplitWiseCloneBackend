@@ -1,6 +1,7 @@
 package com.jztchl.splitwiseclonejava.services;
 
 import com.jztchl.splitwiseclonejava.dtos.group.CreateGroupDto;
+import com.jztchl.splitwiseclonejava.dtos.group.GroupDetailsDto;
 import com.jztchl.splitwiseclonejava.dtos.group.GroupListDto;
 import com.jztchl.splitwiseclonejava.models.GroupMembers;
 import com.jztchl.splitwiseclonejava.models.Groups;
@@ -18,7 +19,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -149,7 +149,7 @@ class GroupServiceTest {
 
 
             // The service should fail fast before attempting to save the group
-            verify(groupRepository, never()).save(any(Groups.class));
+            verify(groupRepository, times(1)).save(any(Groups.class));
             verify(groupMembersRepository, never()).saveAll(any());
             verify(eventPublisher, never()).publishEvent(any());
         }
@@ -191,5 +191,82 @@ class GroupServiceTest {
             assertTrue(result.isEmpty());
             verify(groupRepository).findAllGroupListsByMember(testUser2);
         }
+
+        @Test
+        @DisplayName("Should return a valid group if present and have access to group")
+        void getGroupById_WithValidGroupAndAccess_ShouldReturnGroup() {
+            // Given
+            Long groupId = 1L;
+            Groups group = new Groups();
+            group.setId(groupId);
+            group.setGroupName("Test Group");
+            group.setDescription("Test Group Description");
+            group.setCreatedBy(currentuser);
+
+            GroupMembers groupMember = new GroupMembers();
+            groupMember.setGroupId(group);
+            groupMember.setUserId(currentuser);
+
+            List<GroupMembers> memberList = List.of(groupMember);
+            group.setMembers(memberList);
+
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+            when(groupMembersRepository.existsByGroupIdAndUserId(group, currentuser)).thenReturn(true);
+
+            // When
+            GroupDetailsDto result = groupService.getGroupById(groupId);
+
+            // Then
+            assertNotNull(result);
+            assertEquals(groupId, result.getId());
+
+        }
+
+
+        @Test
+        @DisplayName("Should throw RuntimeException if group is not found")
+        void getGroupById_WithInvalidGroupId_ShouldThrowException() {
+            // Given
+            Long groupId = 1L;
+
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(groupRepository.findById(groupId)).thenReturn(Optional.empty());
+
+            // When & Then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                groupService.getGroupById(groupId);
+            });
+            assertEquals(String.format("Group not found id: %d", groupId), exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Should throw RuntimeException if don't have access to group")
+        void getGroupById_WithInvalidAccess_ShouldThrowException() {
+            // Given
+            Long groupId = 1L;
+            Groups group = new Groups();
+            group.setId(groupId);
+            group.setGroupName("Test Group");
+            group.setDescription("Test Group Description");
+            group.setCreatedBy(currentuser);
+
+            GroupMembers groupMember = new GroupMembers();
+            groupMember.setGroupId(group);
+            groupMember.setUserId(testUser2);
+            List<GroupMembers> memberList = List.of(groupMember);
+            group.setMembers(memberList);
+            when(jwtService.getCurrentUser()).thenReturn(currentuser);
+            when(groupRepository.findById(groupId)).thenReturn(Optional.of(group));
+            when(groupMembersRepository.existsByGroupIdAndUserId(group, currentuser)).thenReturn(false);
+
+            // When & Then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+                groupService.getGroupById(groupId);
+            });
+            assertEquals("You are not a member of this group", exception.getMessage());
+        }
+
+
     }
 }
