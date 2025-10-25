@@ -22,6 +22,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -153,5 +154,66 @@ class ExpenseServiceTest {
 
 
         }
+
+
+        @Test
+        @DisplayName("Should create an percentage split expense successfully")
+        void createExpense_PercentageSplit_ShouldSucceed() {
+            // Given
+            CreateExpenseDto dto = new CreateExpenseDto();
+            dto.setGroupId(testGroup.getId());
+            dto.setDescription("Test Expense");
+            dto.setAmount(BigDecimal.valueOf(120));
+            dto.setSplitType(Expenses.SplitType.PERCENTAGE);
+            HashMap<Long, BigDecimal> splitDetails = new HashMap<>();
+            splitDetails.put(Long.valueOf(testUser2.getId()), BigDecimal.valueOf(50));
+            splitDetails.put(Long.valueOf(testUser3.getId()), BigDecimal.valueOf(50));
+            dto.setSplitDetails(splitDetails);
+            List<Long> memberIds = List.of(Long.valueOf(testUser2.getId()), Long.valueOf(testUser3.getId()));
+
+
+            Expenses expenses = new Expenses();
+            expenses.setId(1L);
+            expenses.setGroupId(testGroup);
+            expenses.setAmount(BigDecimal.valueOf(120));
+            expenses.setSplitType(Expenses.SplitType.PERCENTAGE);
+            expenses.setPaidBy(currentUser);
+
+            //when
+            when(jwtService.getCurrentUser()).thenReturn(currentUser);
+            when(groupRepository.findById(testGroup.getId())).thenReturn(Optional.of(testGroup));
+            when(groupMembersRepository.findByGroupIdAndUserId(testGroup, currentUser)).thenReturn(Optional.of(gm1));
+            when(expenseRepository.save(any(Expenses.class))).thenReturn(expenses);
+            when(groupMembersRepository.findAllByGroupfindUserIds(testGroup, memberIds)).thenReturn(List.of(gm2, gm3));
+
+
+            ExpenseDetailDto newExpenseDetailDto = expenseService.createExpense(dto);
+            System.out.println(newExpenseDetailDto);
+
+            assertNotNull(newExpenseDetailDto);
+            verify(groupRepository, times(1)).findById(testGroup.getId());
+            verify(expenseRepository, times(2)).save(any(Expenses.class));
+            verify(groupMembersRepository, times(1)).findByGroupIdAndUserId(any(Groups.class), any(Users.class));
+            verify(groupMembersRepository, times(1)).findAllByGroupfindUserIds(any(Groups.class), any());
+
+
+            assertEquals(newExpenseDetailDto.getId(), expenses.getId());
+            assertEquals(0, newExpenseDetailDto.getAmount().compareTo(expenses.getAmount()));
+            assertEquals(newExpenseDetailDto.getSplitType(), expenses.getSplitType());
+            assertEquals(newExpenseDetailDto.getPaidBy(), Long.valueOf(currentUser.getId()));
+            assertEquals(newExpenseDetailDto.getDescription(), expenses.getDescription());
+            assertEquals(2, newExpenseDetailDto.getShares().size());
+            assertEquals(0, BigDecimal.valueOf(60.00).compareTo(newExpenseDetailDto.getShares().get(0).getAmountOwed()));
+            assertEquals(0, BigDecimal.valueOf(60.00).compareTo(newExpenseDetailDto.getShares().get(1).getAmountOwed()));
+            assertEquals(Long.valueOf(testUser2.getId()), newExpenseDetailDto.getShares().get(0).getUserId());
+            assertEquals(Long.valueOf(testUser3.getId()), newExpenseDetailDto.getShares().get(1).getUserId());
+            assertFalse(newExpenseDetailDto.getShares().get(0).isPaid());
+            assertFalse(newExpenseDetailDto.getShares().get(1).isPaid());
+            assertEquals(0, BigDecimal.valueOf(0).compareTo(newExpenseDetailDto.getShares().get(0).getAmountRemaining()));
+            assertEquals(0, BigDecimal.valueOf(0).compareTo(newExpenseDetailDto.getShares().get(1).getAmountRemaining()));
+
+
+        }
+
     }
 }
