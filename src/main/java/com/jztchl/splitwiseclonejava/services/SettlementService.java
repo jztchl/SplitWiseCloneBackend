@@ -58,7 +58,7 @@ public class SettlementService {
         for (Settlement settlement : settlements) {
             totalPayment = totalPayment.add(settlement.getAmount());
         }
-        if (totalPayment.compareTo(dto.getAmount()) > 0) {
+        if (totalPayment.add(dto.getAmount()).compareTo(dto.getAmount()) > 0) {
             logger.warn("Total payment cannot exceed the amount to be paid expenseId: {}", dto.getExpenseId());
             throw new RuntimeException("Total payment cannot exceed the amount to be paid");
         }
