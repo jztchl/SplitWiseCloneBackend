@@ -2,10 +2,7 @@ package com.jztchl.splitwiseclonejava.services;
 
 import com.jztchl.splitwiseclonejava.dtos.expense.CreateExpenseDto;
 import com.jztchl.splitwiseclonejava.dtos.expense.ExpenseDetailDto;
-import com.jztchl.splitwiseclonejava.models.Expenses;
-import com.jztchl.splitwiseclonejava.models.GroupMembers;
-import com.jztchl.splitwiseclonejava.models.Groups;
-import com.jztchl.splitwiseclonejava.models.Users;
+import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
@@ -270,6 +267,94 @@ class ExpenseServiceTest {
             assertFalse(newExpenseDetailDto.getShares().get(1).isPaid());
             assertEquals(0, BigDecimal.valueOf(0).compareTo(newExpenseDetailDto.getShares().get(0).getAmountRemaining()));
             assertEquals(0, BigDecimal.valueOf(0).compareTo(newExpenseDetailDto.getShares().get(1).getAmountRemaining()));
+
+
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Test Get Expense")
+    class GetExpenseDetail {
+
+        @Test
+        @DisplayName("Get Expense Detail Successfully")
+        void getExpense_Detail_Successfully() {
+            //Given
+            Expenses expenses = new Expenses();
+            expenses.setId(1L);
+            expenses.setGroupId(testGroup);
+            expenses.setAmount(BigDecimal.valueOf(100));
+            expenses.setSplitType(Expenses.SplitType.EQUAL);
+            expenses.setPaidBy(currentUser);
+
+            ExpenseShare share1 = new ExpenseShare();
+            share1.setId(1L);
+            share1.setExpense(expenses);
+            share1.setUserId(testUser2);
+            share1.setAmountOwed(BigDecimal.valueOf(50));
+            share1.setPaid(false);
+
+            ExpenseShare share2 = new ExpenseShare();
+            share2.setId(2L);
+            share2.setExpense(expenses);
+            share2.setUserId(testUser3);
+            share2.setAmountOwed(BigDecimal.valueOf(50));
+            share2.setPaid(false);
+
+            expenses.getShares().add(share1);
+            expenses.getShares().add(share2);
+
+            //When
+            when(jwtService.getCurrentUser()).thenReturn(currentUser);
+            when(expenseRepository.findByIdWithDetails(expenses.getId())).thenReturn(Optional.of(expenses));
+            when(groupMembersRepository.findByGroupIdAndUserId(expenses.getGroupId(), currentUser)).thenReturn(Optional.of(gm1));
+            when(miscCalculations.calculateAmountTillNow(any(ExpenseShare.class))).thenReturn(BigDecimal.valueOf(0));
+
+
+            ExpenseDetailDto expenseDetailDto = expenseService.getExpenseDetail(expenses.getId());
+
+            //Then
+            assertNotNull(expenseDetailDto);
+            assertEquals(expenses.getId(), expenseDetailDto.getId());
+            assertEquals(expenses.getAmount(), expenseDetailDto.getAmount());
+            verify(groupMembersRepository, times(1)).findByGroupIdAndUserId(testGroup, currentUser);
+            assertEquals(2, expenseDetailDto.getShares().size());
+
+        }
+
+        @Test
+        @DisplayName("Get Expense Raise Exception not found")
+        void getExpense_Detail_RaiseExceptionNotFound() {
+            //Given
+
+            //When
+            when(expenseRepository.findByIdWithDetails(1L)).thenReturn(Optional.empty());
+
+            //Then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> expenseService.getExpenseDetail(1L));
+            assertEquals("Expense not found", exception.getMessage());
+        }
+
+        @Test
+        @DisplayName("Get Expense Raise No permission")
+        void getExpense_Detail_RaiseExceptionNoPermission() {
+            //Given
+            Expenses expenses = new Expenses();
+            expenses.setId(1L);
+            expenses.setGroupId(testGroup);
+            expenses.setAmount(BigDecimal.valueOf(100));
+            expenses.setSplitType(Expenses.SplitType.EQUAL);
+
+            //when
+            when(jwtService.getCurrentUser()).thenReturn(currentUser);
+            when(expenseRepository.findByIdWithDetails(expenses.getId())).thenReturn(Optional.of(expenses));
+            when(groupMembersRepository.findByGroupIdAndUserId(expenses.getGroupId(), currentUser)).thenReturn(Optional.empty());
+
+
+            //then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> expenseService.getExpenseDetail(expenses.getId()));
+            assertEquals("You do not have permission to view this expense", exception.getMessage());
 
 
         }
