@@ -1,6 +1,7 @@
 package com.jztchl.splitwiseclonejava.services;
 
 import com.jztchl.splitwiseclonejava.dtos.settlement.CreateSettlementDto;
+import com.jztchl.splitwiseclonejava.dtos.settlement.MarkSettlementDto;
 import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.*;
 import com.jztchl.splitwiseclonejava.utility.EmailService;
@@ -20,7 +21,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 
 @DisplayName("SettlementService Tests")
@@ -154,7 +155,7 @@ class SettlementServiceTest {
             Settlement settlement = new Settlement();
             settlement.setId(1L);
             settlement.setExpense(expense1);
-            settlement.setPayer(currentUser);
+            settlement.setPayer(testUser2);
             settlement.setAmount(BigDecimal.valueOf(50));
             settlement.setExpenseShare(share1);
             settlement.setPaymentRef(paymentref);
@@ -162,12 +163,12 @@ class SettlementServiceTest {
             settlement.setNote("Test Note");
 
             //When
-            when(jwtService.getCurrentUser()).thenReturn(currentUser);
+            when(jwtService.getCurrentUser()).thenReturn(testUser2);
             when(expenseRepository.getReferenceById(expense1.getId())).thenReturn(expense1);
-            when(expenseShareRepository.existsByIdAndUserId(share1.getId(), currentUser)).thenReturn(true);
+            when(expenseShareRepository.existsByIdAndUserId(share1.getId(), testUser2)).thenReturn(true);
             when(settlementRepository.save(Mockito.any(Settlement.class))).thenReturn(settlement);
             when(settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, dto.getExpenseShareId())).thenReturn(
-                    List.of(settlement)
+                    List.of()
             );
 
 
@@ -193,7 +194,7 @@ class SettlementServiceTest {
             Settlement settlement = new Settlement();
             settlement.setId(1L);
             settlement.setExpense(expense1);
-            settlement.setPayer(currentUser);
+            settlement.setPayer(testUser2);
             settlement.setAmount(BigDecimal.valueOf(50));
             settlement.setExpenseShare(share1);
             settlement.setPaymentRef(paymentref);
@@ -201,8 +202,8 @@ class SettlementServiceTest {
             settlement.setNote("Test Note");
 
             //When
-            when(jwtService.getCurrentUser()).thenReturn(currentUser);
-            when(expenseShareRepository.existsByIdAndUserId(share1.getId(), currentUser)).thenReturn(true);
+            when(jwtService.getCurrentUser()).thenReturn(testUser2);
+            when(expenseShareRepository.existsByIdAndUserId(share1.getId(), testUser2)).thenReturn(true);
             when(settlementRepository.findAllByStatusAndExpenseShare_Id(Settlement.SettlementStatus.CONFIRMED, dto.getExpenseShareId())).thenReturn(
                     List.of(settlement)
             );
@@ -211,6 +212,75 @@ class SettlementServiceTest {
             RuntimeException exception = assertThrows(RuntimeException.class, () -> settlementService.createSettlement(dto));
             //Then
             assertEquals("Total payment cannot exceed the amount to be paid", exception.getMessage());
+
+
+        }
+
+    }
+
+    @Nested
+    @DisplayName("Test mark settlement status")
+    class MarkSettlementStatus {
+        @Test
+        @DisplayName("Mark settlement status successfully")
+        void markSettlementStatusTest() {
+            //Given
+            Settlement settlement = new Settlement();
+            settlement.setId(1L);
+            settlement.setExpense(expense1);
+            settlement.setPayer(testUser2);
+            settlement.setAmount(BigDecimal.valueOf(50));
+            settlement.setExpenseShare(share1);
+            settlement.setPaymentRef(paymentref);
+            settlement.setStatus(Settlement.SettlementStatus.PENDING);
+            settlement.setNote("Test Note");
+
+            MarkSettlementDto dto = new MarkSettlementDto();
+            dto.setSettlementId(settlement.getId());
+            dto.setStatus("CONFIRMED");
+
+
+            //When
+            when(jwtService.getCurrentUser()).thenReturn(currentUser);
+            when(settlementRepository.findById(settlement.getId())).thenReturn(java.util.Optional.of(settlement));
+
+
+            //Then
+            String result = settlementService.markSettlementStatus(dto);
+            assertNotNull(result);
+            assertEquals("Settlement marked successfully", result);
+            verify(settlementRepository, times(1)).save(settlement);
+            assertEquals(Settlement.SettlementStatus.CONFIRMED, settlement.getStatus());
+
+
+        }
+
+        @Test
+        @DisplayName("Mark settlement Fail due to no permission")
+        void markSettlementStatusFailTest() {
+            //Given
+            Settlement settlement = new Settlement();
+            settlement.setId(1L);
+            settlement.setExpense(expense1);
+            settlement.setPayer(testUser2);
+            settlement.setAmount(BigDecimal.valueOf(50));
+            settlement.setExpenseShare(share1);
+            settlement.setPaymentRef(paymentref);
+            settlement.setStatus(Settlement.SettlementStatus.PENDING);
+            settlement.setNote("Test Note");
+
+            MarkSettlementDto dto = new MarkSettlementDto();
+            dto.setSettlementId(settlement.getId());
+            dto.setStatus("CONFIRMED");
+
+
+            //When
+            when(jwtService.getCurrentUser()).thenReturn(testUser2);//not the creator
+            when(settlementRepository.findById(settlement.getId())).thenReturn(java.util.Optional.of(settlement));
+
+            //Then
+            RuntimeException exception = assertThrows(RuntimeException.class, () -> settlementService.markSettlementStatus(dto));
+            assertEquals("You do not have permission to mark this settlement", exception.getMessage());
 
 
         }
