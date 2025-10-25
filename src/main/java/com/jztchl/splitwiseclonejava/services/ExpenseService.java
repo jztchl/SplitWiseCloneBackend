@@ -4,14 +4,15 @@ import com.jztchl.splitwiseclonejava.dtos.expense.CreateExpenseDto;
 import com.jztchl.splitwiseclonejava.dtos.expense.ExpenseDetailDto;
 import com.jztchl.splitwiseclonejava.dtos.expense.ExpenseShareDto;
 import com.jztchl.splitwiseclonejava.dtos.expense.ListExpenseDto;
+import com.jztchl.splitwiseclonejava.events.ExpenseCreatedEvent;
 import com.jztchl.splitwiseclonejava.models.*;
 import com.jztchl.splitwiseclonejava.repos.ExpenseRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupMembersRepository;
 import com.jztchl.splitwiseclonejava.repos.GroupRepository;
-import com.jztchl.splitwiseclonejava.repos.SettlementRepository;
-import com.jztchl.splitwiseclonejava.utility.EmailService;
+
 
 import com.jztchl.splitwiseclonejava.utility.MiscCalculations;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,9 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
-
 @Service
 public class ExpenseService {
 
@@ -31,19 +29,19 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final GroupRepository groupRepository;
     private final GroupMembersRepository groupMembersRepository;
-    private final EmailService emailService;
     private final MiscCalculations miscCalculations;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     public ExpenseService(JwtService jwtService, ExpenseRepository expenseRepository, GroupRepository groupRepository,
-                          GroupMembersRepository groupMembersRepository, EmailService emailService,
-                          MiscCalculations miscCalculations) {
+                          GroupMembersRepository groupMembersRepository,
+                          MiscCalculations miscCalculations, ApplicationEventPublisher eventPublisher) {
         this.jwtService = jwtService;
         this.expenseRepository = expenseRepository;
         this.groupRepository = groupRepository;
         this.groupMembersRepository = groupMembersRepository;
-        this.emailService = emailService;
         this.miscCalculations = miscCalculations;
+        this.eventPublisher = eventPublisher;
     }
 
     @Transactional
@@ -179,18 +177,7 @@ public class ExpenseService {
 
         }
         expenseRepository.save(expense);
-        Long finalExpenseId = expense.getId();
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                try {
-
-                    emailService.newExpenseSharedNotification(finalExpenseId);
-                } catch (Exception e) {
-                    System.err.println("Error in post-commit processing: " + e.getMessage());
-                }
-            }
-        });
+        eventPublisher.publishEvent(new ExpenseCreatedEvent(this, expense.getId()));
         expenseDetailDto.setShares(shareDtos);
 
         return expenseDetailDto;
